@@ -104,12 +104,55 @@ jobs:
         # Checkout do branch padrão (main), não do head_sha do workflow_run:
         # este job roda com contents:write, e dar checkout do ref não-confiável
         # do evento seria um "pwn request" (Semgrep workflow-run-target-code-checkout).
-        # O release é fixado no commit certo via `gh release create --target "$SHA"`,
-        # e `git tag --list` só precisa das tags (presentes em qualquer checkout).
+        # O release é fixado no commit certo via `gh release create --target "$SHA"`
+        # e via `git checkout "$SHA"` logo abaixo — um checkout local de um commit
+        # já presente no histórico confiável, não um fetch de ref externo.
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Checkout do commit exato liberado
+        run: git checkout "${{ github.event.workflow_run.head_sha }}"
+
+      - name: Compute CalVer tag
+        id: tag
+        run: |
+          # CalVer YYYY.MM.DD[.N] (UTC). Primeira release do dia sem sufixo;
+          # releases seguintes no mesmo dia ganham .1, .2, ...
+          TODAY=$(date -u +%Y.%m.%d)
+          EXISTING=$(git tag --list "$TODAY" "$TODAY.*" | wc -l)
+          if [ "$EXISTING" -eq 0 ]; then TAG="$TODAY"; else TAG="$TODAY.$EXISTING"; fi
+          echo "Releasing $TAG (existentes hoje: $EXISTING)"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache: true
+
+      - name: Build multi-platform binaries
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          mkdir -p dist
+          for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64; do
+            GOOS=${platform%/*}
+            GOARCH=${platform#*/}
+            ext=""
+            [ "$GOOS" = "windows" ] && ext=".exe"
+            name="ghp_${TAG}_${GOOS}_${GOARCH}"
+            echo "Building $name"
+            CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build -trimpath -ldflags="-s -w" -o "dist/ghp${ext}" ./cmd/ghp
+            if [ "$GOOS" = "windows" ]; then
+              (cd dist && zip -q "${name}.zip" "ghp${ext}" && rm "ghp${ext}")
+            else
+              (cd dist && tar -czf "${name}.tar.gz" "ghp${ext}" && rm "ghp${ext}")
+            fi
+          done
+          (cd dist && sha256sum * > checksums.txt)
+          ls -la dist/
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -121,20 +164,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create CalVer tag, imagem versionada e GitHub Release
+      - name: Create tag, imagem versionada e GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ github.event.workflow_run.head_sha }}
+          TAG: ${{ steps.tag.outputs.tag }}
           IMAGE: ${{ env.REGISTRY }}/${{ needs.publish-edge-image.outputs.image }}
           DIGEST: ${{ needs.publish-edge-image.outputs.digest }}
         run: |
-          # CalVer YYYY.MM.DD[.N] (UTC). Primeira release do dia sem sufixo;
-          # releases seguintes no mesmo dia ganham .1, .2, ...
-          TODAY=$(date -u +%Y.%m.%d)
-          EXISTING=$(git tag --list "$TODAY" "$TODAY.*" | wc -l)
-          if [ "$EXISTING" -eq 0 ]; then TAG="$TODAY"; else TAG="$TODAY.$EXISTING"; fi
-          echo "Releasing $TAG at $SHA (existentes hoje: $EXISTING)"
-
           # Retagueia a imagem já buildada e escaneada no job anterior (por
           # digest, sem rebuild) com a versão CalVer e "latest".
           docker buildx imagetools create \
@@ -142,6 +179,7 @@ jobs:
             -t "$IMAGE:latest" \
             "$IMAGE@$DIGEST"
 
-          # gh cria a tag em $SHA e a release juntos; --generate-notes monta o
-          # corpo a partir dos commits/PRs desde a release anterior.
-          gh release create "$TAG" --target "$SHA" --title "$TAG" --generate-notes
+          # gh cria a tag em $SHA e a release juntos, com os binários
+          # multi-plataforma como assets; --generate-notes monta o corpo a
+          # partir dos commits/PRs desde a release anterior.
+          gh release create "$TAG" --target "$SHA" --title "$TAG" --generate-notes dist/*
