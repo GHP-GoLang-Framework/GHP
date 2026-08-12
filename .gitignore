@@ -29,6 +29,16 @@ go.work.sum
 
 tmp/
 
+# Build outputs
+bin/
+/ghp
+
+# Diretório de saída do ghp build/dev (código gerado + artefatos de build)
+.ghp/
+
+# Node (camada de tooling só para husky/commitlint)
+node_modules/
+
 # Editor/IDE
 # .idea/
 # .vscode/
