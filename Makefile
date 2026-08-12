@@ -21,7 +21,7 @@ lint: vet
 	golangci-lint run ./...
 
 build:
-	$(GO) build -o bin/$(BINARY) ./cmd/ghp
+	$(GO) build -o bin/$(BINARY) ./src/cmd/ghp
 
 test-unit:
 	$(GO) test ./... -race
