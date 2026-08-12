@@ -64,11 +64,11 @@ cd GHP
 go build -o bin/ghp ./cmd/ghp
 ```
 
-Também há uma imagem Docker publicada a cada merge na `main` (build contínuo, não é uma release):
+Também há uma imagem Docker publicada a cada merge na `main`: `edge` é o build contínuo (a ponta do desenvolvimento), e uma tag CalVer versionada (`YYYY.MM.DD[.N]`) + `latest` são criadas automaticamente em seguida — todo merge verde já é uma release.
 
 ```bash
-docker pull ghcr.io/ghp-golang-framework/ghp:edge
-docker run --rm ghcr.io/ghp-golang-framework/ghp:edge help
+docker pull ghcr.io/ghp-golang-framework/ghp:latest
+docker run --rm ghcr.io/ghp-golang-framework/ghp:latest help
 ```
 
 ## Desenvolvendo o GHP
