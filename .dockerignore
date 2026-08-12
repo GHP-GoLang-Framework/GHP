@@ -1,0 +1,35 @@
+# Git & CI
+.git
+.github
+.husky
+
+# Node (camada de tooling só para husky/commitlint)
+node_modules
+package.json
+package-lock.json
+commitlint.config.js
+
+# Build outputs
+bin
+dist
+*.out
+coverage.*
+
+# Testes
+test
+
+# Dev tools & config
+.golangci.yml
+Makefile
+codecov.yml
+
+# Docs
+docs
+README.md
+LICENSE
+
+# IDE / OS
+.vscode
+.idea
+*.swp
+.DS_Store
