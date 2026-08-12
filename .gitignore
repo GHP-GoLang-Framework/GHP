@@ -42,3 +42,5 @@ node_modules/
 # Editor/IDE
 # .idea/
 # .vscode/
+
+*-lock*
