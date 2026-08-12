@@ -1,9 +1,11 @@
 name: CD
 
-# Publica uma imagem "edge" a cada push em main que passar no CI — build
-# contínuo para quem quer testar a ponta do desenvolvimento. Releases
-# versionadas (semver) e o GitHub Release ficam por conta do release.yml,
-# disparado só por tag `v*` criada manualmente.
+# Publica uma imagem "edge" a cada push em main que passar no CI, e cria
+# automaticamente uma release CalVer (YYYY.MM.DD[.N]) logo em seguida — mesmo
+# padrão do Nexo: a tag marca quando aquele build ficou disponível, criada
+# depois do publish, não antes. release.yml cobre só o caso de alguém
+# taguear uma CalVer manualmente (este job usa GITHUB_TOKEN, que não dispara
+# outros workflows, então a criação da release acontece aqui mesmo).
 on:
   workflow_run:
     workflows: ['CI']
@@ -26,6 +28,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      image: ${{ steps.lowercase.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,9 +41,13 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Lowercase image name
+        id: lowercase
         # GHCR exige nome de imagem em minúsculas; github.repository preserva
         # o case real do repositório (ex.: GHP-GoLang-Framework/GHP).
-        run: echo "IMAGE_NAME=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+        run: |
+          IMAGE=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=$IMAGE" >> "$GITHUB_ENV"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
 
       - name: Extract metadata
         id: meta
@@ -75,9 +84,64 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  release:
+    name: Tag & Release
+    needs: [publish-edge-image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout repository
+        # Checkout do branch padrão (main), não do head_sha do workflow_run:
+        # este job roda com contents:write, e dar checkout do ref não-confiável
+        # do evento seria um "pwn request" (Semgrep workflow-run-target-code-checkout).
+        # O release é fixado no commit certo via `gh release create --target "$SHA"`,
+        # e `git tag --list` só precisa das tags (presentes em qualquer checkout).
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create CalVer tag, imagem versionada e GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          IMAGE: ${{ env.REGISTRY }}/${{ needs.publish-edge-image.outputs.image }}
+          DIGEST: ${{ needs.publish-edge-image.outputs.digest }}
+        run: |
+          # CalVer YYYY.MM.DD[.N] (UTC). Primeira release do dia sem sufixo;
+          # releases seguintes no mesmo dia ganham .1, .2, ...
+          TODAY=$(date -u +%Y.%m.%d)
+          EXISTING=$(git tag --list "$TODAY" "$TODAY.*" | wc -l)
+          if [ "$EXISTING" -eq 0 ]; then TAG="$TODAY"; else TAG="$TODAY.$EXISTING"; fi
+          echo "Releasing $TAG at $SHA (existentes hoje: $EXISTING)"
+
+          # Retagueia a imagem já buildada e escaneada no job anterior (por
+          # digest, sem rebuild) com a versão CalVer e "latest".
+          docker buildx imagetools create \
+            -t "$IMAGE:$TAG" \
+            -t "$IMAGE:latest" \
+            "$IMAGE@$DIGEST"
+
+          # gh cria a tag em $SHA e a release juntos; --generate-notes monta o
+          # corpo a partir dos commits/PRs desde a release anterior.
+          gh release create "$TAG" --target "$SHA" --title "$TAG" --generate-notes
