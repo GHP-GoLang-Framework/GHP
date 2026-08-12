@@ -27,13 +27,13 @@ test-unit:
 	$(GO) test ./... -race
 
 test-integration:
-	$(GO) test ./test/integration/... -tags=integration -race
+	$(GO) test ./src/test/integration/... -tags=integration -race
 
 test-e2e: build
-	$(GO) test ./test/e2e/... -tags=e2e
+	$(GO) test ./src/test/e2e/... -tags=e2e
 
 test-coverage:
-	$(GO) test ./... ./test/integration/... -tags=integration -coverprofile=$(COVERAGE_FILE) -covermode=atomic -coverpkg=./...
+	$(GO) test ./... ./src/test/integration/... -tags=integration -coverprofile=$(COVERAGE_FILE) -covermode=atomic -coverpkg=./...
 	@$(GO) tool cover -func=$(COVERAGE_FILE) | tail -1
 	@COVERAGE=$$($(GO) tool cover -func=$(COVERAGE_FILE) | grep total: | awk '{print substr($$3, 1, length($$3)-1)}'); \
 	echo "Cobertura total: $$COVERAGE% (mínimo: $(COVERAGE_MIN)%)"; \

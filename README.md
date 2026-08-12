@@ -61,7 +61,7 @@ Ainda não há binário publicado nem `go install` disponível — isso faz part
 ```bash
 git clone https://github.com/GHP-GoLang-Framework/GHP.git
 cd GHP
-go build -o bin/ghp ./cmd/ghp
+go build -o bin/ghp ./src/cmd/ghp
 ```
 
 Também há uma imagem Docker publicada a cada merge na `main`: `edge` é o build contínuo (a ponta do desenvolvimento), e uma tag CalVer versionada (`YYYY.MM.DD[.N]`) + `latest` são criadas automaticamente em seguida — todo merge verde já é uma release.
