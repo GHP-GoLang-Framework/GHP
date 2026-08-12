@@ -1,0 +1,36 @@
+<go:import ("fmt")>
+<go
+    fmt.Println("THIS IS A TEST MESSAGE")
+    title := "THIS IS A TEST TITLE"
+    method := r.GetMethod()
+>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><@=title></title>
+  <link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+    <go:if method == "POST">
+        <h1>Método POST</h1>
+    <go:else>
+        <h1>Quais outros métodos existem? kkk</h1>
+    </go:if>
+
+    <go:switch variable>
+        <go:case ...>
+
+        <go:case ...>
+
+        <go:case ...>
+
+        <go:default ...>
+    </go:switch>
+
+    <go:for ...>
+        ...
+    </go:for>
+</body>
+</html>
