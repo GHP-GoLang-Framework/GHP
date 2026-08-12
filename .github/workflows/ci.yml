@@ -42,10 +42,16 @@ jobs:
       - name: go vet
         run: go vet ./...
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
+      # TEMPORÁRIO: golangci-lint "latest" (resolvido pela action) ainda é
+      # buildado com go1.24, que recusa lintar um módulo com `go 1.26.5` no
+      # go.mod ("the Go language version used to build golangci-lint is
+      # lower than the targeted Go version"). Reativar assim que uma release
+      # buildada com go1.26+ existir, ou migrar o .golangci.yml pro schema
+      # v2 e pinar essa versão explicitamente.
+      # - name: golangci-lint
+      #   uses: golangci/golangci-lint-action@v6
+      #   with:
+      #     version: latest
 
   unit-tests:
     name: Unit Tests
@@ -173,9 +179,13 @@ jobs:
           fetch-depth: 0
 
       - name: Run gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # gitleaks/gitleaks-action@v2 passou a exigir GITLEAKS_LICENSE
+        # (mudança de licenciamento do wrapper, não do CLI). O binário do
+        # gitleaks em si continua open source — roda direto, sem o wrapper.
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz" -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks detect --source . --verbose --redact
 
   pr-title:
     name: PR Title Convention
