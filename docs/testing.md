@@ -8,8 +8,8 @@ Go não tem o conceito de "projeto de teste" configurável como o Vitest — a o
 
 | Tipo | Onde fica | Como roda | Por quê |
 | --- | --- | --- | --- |
-| Unit | `*_test.go` junto do código (ex.: `src/cmd/ghp/main_test.go`) | `go test ./...` (padrão, sem flag) | Mesmo pacote do código testado — acessa funções não-exportadas direto, sem precisar exportar nada só pra testar. Precisa rodar sempre, sem exigir flag. |
-| Integration | `src/test/integration/*_test.go` | `go test ./src/test/integration/... -tags=integration` | Pacote externo, isolado com build tag — só roda quando pedido explicitamente, nunca sem querer dentro de `go test ./...`. |
+| Unit | `*_test.go` junto do código (ex.: `src/cmd/ghp/main_test.go`) | `go test ./src/...` (padrão, sem flag) | Mesmo pacote do código testado — acessa funções não-exportadas direto, sem precisar exportar nada só pra testar. Precisa rodar sempre, sem exigir flag. |
+| Integration | `src/test/integration/*_test.go` | `go test ./src/test/integration/... -tags=integration` | Pacote externo, isolado com build tag — só roda quando pedido explicitamente, nunca sem querer dentro de `go test ./src/...`. |
 | E2E | `src/test/e2e/*_test.go` | `go test ./src/test/e2e/... -tags=e2e` | Mesma lógica do integration: pacote externo + build tag. Roda contra o binário `ghp` já compilado. |
 
 Não existe (e não deve existir) uma pasta `src/test/unit/` — colocar o teste unitário longe do código que ele testa vai contra a convenção idiomática do Go.
@@ -19,7 +19,7 @@ Não existe (e não deve existir) uma pasta `src/test/unit/` — colocar o teste
 Via `Makefile` (mesmos comandos que o CI roda):
 
 ```bash
-make test-unit         # go test ./... -race
+make test-unit         # go test ./src/... -race
 make test-integration  # go test ./src/test/integration/... -tags=integration -race
 make test-e2e          # builda o binário e roda src/test/e2e/... -tags=e2e
 make test-coverage     # unit + integration com coverage, falha se < 90%
@@ -29,7 +29,7 @@ make test-coverage     # unit + integration com coverage, falha se < 90%
 
 ## Cobertura
 
-- Mínimo exigido: **90%**, calculado sobre unit + integration combinados (`-coverpkg=./...` garante que a cobertura conta mesmo quando o teste mora num pacote externo como `src/test/integration`).
+- Mínimo exigido: **90%**, calculado sobre unit + integration combinados (`-coverpkg=./src/...` garante que a cobertura conta mesmo quando o teste mora num pacote externo como `src/test/integration`).
 - `make test-coverage` roda local e falha se ficar abaixo do mínimo — é o mesmo cálculo que o job `coverage` do `ci.yml` faz.
 - O relatório também sobe pro Codecov (`codecov.yml` define os mesmos 90% como target de `project` e `patch`).
 
@@ -42,7 +42,7 @@ go tool cover -html=coverage.out   # ver cobertura por linha, no navegador
 
 Cada tipo de teste roda num job separado, todos exigidos pelo job `gate`:
 
-- `unit-tests` — `go test ./... -race`
+- `unit-tests` — `go test ./src/... -race`
 - `integration-tests` — `go test ./src/test/integration/... -tags=integration -race`
 - `e2e-tests` — builda o binário, depois `go test ./src/test/e2e/... -tags=e2e`
 - `coverage` — roda unit+integration com `-coverprofile`, checa o mínimo de 90%, sobe pro Codecov
