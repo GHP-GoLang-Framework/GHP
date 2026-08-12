@@ -57,8 +57,8 @@ Como contribuir com o GHP: branch, commit, PR e review.
 
 ## O que acontece depois do merge
 
-- O merge na `main` dispara o CI de novo e, se verde, publica uma imagem Docker `edge` no GitHub Container Registry — build contínuo, não é uma release.
-- Releases de verdade saem de tags de versão (`v1.2.3`), criadas manualmente por [@castrogusttavo](https://github.com/castrogusttavo) — publicam a imagem versionada e o GitHub Release.
+- O merge na `main` dispara o CI de novo e, se verde, publica uma imagem Docker `edge` no GitHub Container Registry.
+- Logo em seguida, uma release é criada **automaticamente**: tag CalVer do dia (`YYYY.MM.DD[.N]`), imagem Docker versionada e GitHub Release com notas geradas a partir dos commits. Não precisa de nenhuma ação manual — todo merge verde na `main` já é uma release.
 
 ## O que não vai funcionar
 

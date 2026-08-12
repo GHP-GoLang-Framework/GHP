@@ -1,11 +1,15 @@
 name: Release
 
-# Dispara só quando alguém cria manualmente uma tag semver (v1.2.3, v1.2.3-rc.1
-# etc.) — build + scan + push da imagem versionada e criação do GitHub Release.
+# Cobre tags CalVer (YYYY.MM.DD[.N]) empurradas manualmente por um humano —
+# ex.: re-taguear um commit antigo, hotfix pontual fora do fluxo normal.
+# Tags criadas pelo cd.yml usam GITHUB_TOKEN, que não dispara outros
+# workflows, então o cd.yml já cria a própria release nesse caminho; este
+# workflow só evita que uma tag manual fique sem imagem versionada e sem
+# release.
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+      - '20[0-9][0-9].[0-9][0-9].[0-9][0-9]*'
 
 permissions:
   contents: read
@@ -30,8 +34,6 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Lowercase image name
-        # GHCR exige nome de imagem em minúsculas; github.repository preserva
-        # o case real do repositório (ex.: GHP-GoLang-Framework/GHP).
         run: echo "IMAGE_NAME=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
       - name: Extract metadata
@@ -40,8 +42,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ github.ref_name }}
             type=raw,value=latest
 
       - name: Build image for scanning
@@ -89,7 +90,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release if missing
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
@@ -98,4 +99,4 @@ jobs:
             echo "Release $TAG já existe — pulando."
             exit 0
           fi
-          gh release create "$TAG" --title "$TAG" --generate-notes
+          gh release create "$TAG" --title "$TAG" --generate-notes --verify-tag
