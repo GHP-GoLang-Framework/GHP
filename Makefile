@@ -6,25 +6,25 @@ COVERAGE_FILE := coverage.out
 .PHONY: fmt fmt-fix vet lint build test-unit test-integration test-e2e test-coverage docker-build clean
 
 fmt:
-	@unformatted=$$($(GO) fmt -n ./... >/dev/null; gofmt -l .); \
+	@unformatted=$$($(GO) fmt -n ./src/... >/dev/null; gofmt -l ./src); \
 	if [ -n "$$unformatted" ]; then \
 		echo "Arquivos não formatados:"; echo "$$unformatted"; exit 1; \
 	fi
 
 fmt-fix:
-	gofmt -w .
+	gofmt -w ./src
 
 vet:
-	$(GO) vet ./...
+	$(GO) vet ./src/...
 
 lint: vet
-	golangci-lint run ./...
+	golangci-lint run ./src/...
 
 build:
 	$(GO) build -o bin/$(BINARY) ./src/cmd/ghp
 
 test-unit:
-	$(GO) test ./... -race
+	$(GO) test ./src/... -race
 
 test-integration:
 	$(GO) test ./src/test/integration/... -tags=integration -race
@@ -33,7 +33,7 @@ test-e2e: build
 	$(GO) test ./src/test/e2e/... -tags=e2e
 
 test-coverage:
-	$(GO) test ./... ./src/test/integration/... -tags=integration -coverprofile=$(COVERAGE_FILE) -covermode=atomic -coverpkg=./...
+	$(GO) test ./src/... ./src/test/integration/... -tags=integration -coverprofile=$(COVERAGE_FILE) -covermode=atomic -coverpkg=./src/...
 	@$(GO) tool cover -func=$(COVERAGE_FILE) | tail -1
 	@COVERAGE=$$($(GO) tool cover -func=$(COVERAGE_FILE) | grep total: | awk '{print substr($$3, 1, length($$3)-1)}'); \
 	echo "Cobertura total: $$COVERAGE% (mínimo: $(COVERAGE_MIN)%)"; \
