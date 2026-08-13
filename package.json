@@ -4,8 +4,8 @@
   "description": "Scripts de conveniência, git hooks e ferramental de commit para o repositório ghp (Husky + commitlint). O framework em si é Go — ver go.mod e Makefile.",
   "scripts": {
     "prepare": "husky",
-    "dev": "go run ./cmd/ghp dev",
-    "build": "go build -o bin/ghp ./cmd/ghp",
+    "dev": "go run ./src/cmd/ghp dev",
+    "build": "go build -o bin/ghp ./src/cmd/ghp",
     "start": "./bin/ghp help"
   },
   "devDependencies": {

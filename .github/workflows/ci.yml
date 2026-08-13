@@ -40,7 +40,7 @@ jobs:
           fi
 
       - name: go vet
-        run: go vet ./...
+        run: go vet ./src/...
 
       # TEMPORÁRIO: golangci-lint "latest" (resolvido pela action) ainda é
       # buildado com go1.24, que recusa lintar um módulo com `go 1.26.5` no
@@ -67,7 +67,7 @@ jobs:
           cache: true
 
       - name: Run unit tests
-        run: go test ./... -race
+        run: go test ./src/... -race
 
   integration-tests:
     name: Integration Tests
@@ -83,7 +83,7 @@ jobs:
           cache: true
 
       - name: Run integration tests
-        run: go test ./test/integration/... -tags=integration -race
+        run: go test ./src/test/integration/... -tags=integration -race
 
   e2e-tests:
     name: E2E Tests
@@ -99,10 +99,10 @@ jobs:
           cache: true
 
       - name: Build ghp binary
-        run: go build -o bin/ghp ./cmd/ghp
+        run: go build -o bin/ghp ./src/cmd/ghp
 
       - name: Run e2e tests
-        run: go test ./test/e2e/... -tags=e2e
+        run: go test ./src/test/e2e/... -tags=e2e
         env:
           GHP_BINARY: ${{ github.workspace }}/bin/ghp
 
@@ -121,8 +121,8 @@ jobs:
 
       - name: Run tests with coverage (unit + integration)
         run: |
-          go test ./... ./test/integration/... -tags=integration \
-            -coverprofile=coverage.out -covermode=atomic -coverpkg=./...
+          go test ./src/... ./src/test/integration/... -tags=integration \
+            -coverprofile=coverage.out -covermode=atomic -coverpkg=./src/...
 
       - name: Enforce minimum coverage
         run: |
@@ -155,7 +155,7 @@ jobs:
           cache: true
 
       - name: Build
-        run: go build ./...
+        run: go build ./src/...
 
   govulncheck:
     name: Vulnerability Scan (govulncheck)
