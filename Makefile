@@ -24,16 +24,16 @@ build:
 	$(GO) build -o bin/$(BINARY) ./src/cmd/ghp
 
 test-unit:
-	$(GO) test ./src/... -race
+	$(GO) test -short ./src/... -race
 
 test-integration:
-	$(GO) test ./src/test/integration/... -tags=integration -race
+	$(GO) test ./src/test/integration/... -race
 
 test-e2e: build
-	$(GO) test ./src/test/e2e/... -tags=e2e
+	$(GO) test ./src/test/e2e/...
 
 test-coverage:
-	$(GO) test ./src/... ./src/test/integration/... -tags=integration -coverprofile=$(COVERAGE_FILE) -covermode=atomic -coverpkg=./src/...
+	$(GO) test ./src/... -coverprofile=$(COVERAGE_FILE) -covermode=atomic -coverpkg=./src/...
 	@$(GO) tool cover -func=$(COVERAGE_FILE) | tail -1
 	@COVERAGE=$$($(GO) tool cover -func=$(COVERAGE_FILE) | grep total: | awk '{print substr($$3, 1, length($$3)-1)}'); \
 	echo "Cobertura total: $$COVERAGE% (mínimo: $(COVERAGE_MIN)%)"; \
