@@ -67,7 +67,7 @@ jobs:
           cache: true
 
       - name: Run unit tests
-        run: go test ./src/... -race
+        run: go test -short ./src/... -race
 
   integration-tests:
     name: Integration Tests
@@ -83,7 +83,7 @@ jobs:
           cache: true
 
       - name: Run integration tests
-        run: go test ./src/test/integration/... -tags=integration -race
+        run: go test ./src/test/integration/... -race
 
   e2e-tests:
     name: E2E Tests
@@ -102,7 +102,7 @@ jobs:
         run: go build -o bin/ghp ./src/cmd/ghp
 
       - name: Run e2e tests
-        run: go test ./src/test/e2e/... -tags=e2e
+        run: go test ./src/test/e2e/...
         env:
           GHP_BINARY: ${{ github.workspace }}/bin/ghp
 
@@ -121,7 +121,7 @@ jobs:
 
       - name: Run tests with coverage (unit + integration)
         run: |
-          go test ./src/... ./src/test/integration/... -tags=integration \
+          go test ./src/... \
             -coverprofile=coverage.out -covermode=atomic -coverpkg=./src/...
 
       - name: Enforce minimum coverage

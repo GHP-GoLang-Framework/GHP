@@ -29,7 +29,10 @@ git checkout -b feat/nome-da-mudanca
 
 # ... edita, commita ...
 
-make fmt vet test-unit test-integration   # o que o CI vai rodar de qualquer forma
+gofmt -l ./src                    # sem saída = formatado
+go vet ./src/...                  # análise estática
+go test -short ./src/... -race    # testes unit (pula integration/e2e)
+go test ./src/test/integration/... -race   # o que o CI vai rodar de qualquer forma
 
 git push -u origin feat/nome-da-mudanca
 gh pr create --base main --title "feat(escopo): descrição no imperativo"
@@ -51,7 +54,7 @@ Escopo recomendado: o domínio/pacote afetado (`parser`, `codegen`, `cli`, `devs
 
 - `gofmt` — formatação, corrigida automaticamente pelo `pre-commit`.
 - `go vet` — roda no `pre-commit` e no CI.
-- `golangci-lint` — roda no CI (job `lint`); rode `make lint` localmente se quiser adiantar.
+- `golangci-lint` — roda no CI (job `lint`); rode `golangci-lint run ./src/...` localmente se quiser adiantar.
 - Testes cobrindo o que for adicionado — ver [`docs/testing.md`](docs/testing.md) pras convenções (table-driven tests, testar contra `io.Writer`/entrada explícita em vez de globais).
 
 ## Abrindo o PR

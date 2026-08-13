@@ -1,7 +1,7 @@
 {
   "name": "ghp-tooling",
   "private": true,
-  "description": "Scripts de conveniência, git hooks e ferramental de commit para o repositório ghp (Husky + commitlint). O framework em si é Go — ver go.mod e Makefile.",
+  "description": "Scripts de conveniência, git hooks e ferramental de commit para o repositório ghp (Husky + commitlint). O framework em si é Go — ver go.mod.",
   "scripts": {
     "prepare": "husky",
     "dev": "go run ./src/cmd/ghp dev",

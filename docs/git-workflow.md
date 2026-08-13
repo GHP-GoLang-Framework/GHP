@@ -39,7 +39,8 @@ Como contribuir com o GHP: branch, commit, PR e review.
 4. Rode localmente antes de abrir o PR (é o que o CI vai rodar de qualquer forma):
 
    ```bash
-   make fmt vet test-unit test-integration
+   gofmt -l ./src && go vet ./src/... && go test -short ./src/... -race
+   go test ./src/test/integration/... -race
    ```
 
 5. Suba a branch e abra o PR contra a `main`:

@@ -1,12 +1,12 @@
-//go:build integration
-
-// Package integration reúne testes que exercitam múltiplos pacotes juntos
-// (parser+codegen+project) ou chamam o `go build` de verdade, sem precisar
-// do binário `ghp` compilado.
+// Package integration exercises multiple packages together (parser+codegen+project)
+// or calls real `go build`, without needing the compiled `ghp` binary.
 package integration
 
 import "testing"
 
 func TestPlaceholder(t *testing.T) {
-	t.Skip("sem testes de integração ainda — ver GHP-13 no Linear")
+	if testing.Short() {
+		t.Skip("skipped in short mode (go test -short)")
+	}
+	t.Skip("no integration tests yet — see GHP-13 on Linear")
 }

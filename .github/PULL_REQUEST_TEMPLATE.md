@@ -17,7 +17,7 @@ Refs: GHP-
 
 ## Checklist
 
-- [ ] `make fmt vet test-unit test-integration` passa localmente
+- [ ] `gofmt -l ./src` sem saída e `go vet ./src/...` limpos; `go test -short ./src/... -race` e `go test ./src/test/integration/... -race` passam localmente
 - [ ] Testes cobrindo o caso novo (o CI exige cobertura mínima de 90%)
 - [ ] Título do PR segue [Conventional Commits](https://www.conventionalcommits.org/pt-br/) (`tipo(escopo): descrição`)
 - [ ] Documentação atualizada, se necessário (`docs/`, `README.md`)

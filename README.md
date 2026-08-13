@@ -77,10 +77,14 @@ docker run --rm ghcr.io/ghp-golang-framework/ghp:latest help
 git clone https://github.com/GHP-GoLang-Framework/GHP.git
 cd GHP
 npm install     # configura os git hooks (Husky + commitlint)
-make test-unit
+gofmt -l ./src  # sem saída = formatado
+go vet ./src/...
+go test -short ./src/... -race     # unit (pula integration/e2e)
+go test ./src/... -race            # tudo, incluindo integration/e2e
+go build -o bin/ghp ./src/cmd/ghp  # builda o binário
 ```
 
-Veja o [`Makefile`](Makefile) pros demais comandos (`lint`, `test-integration`, `test-e2e`, `test-coverage`, `docker-build`).
+Cobertura (mínimo exigido: 90%): `go test ./src/... -coverprofile=coverage.out -covermode=atomic -coverpkg=./src/...` e depois `go tool cover -func=coverage.out`. Detalhes em [`docs/testing.md`](docs/testing.md).
 
 ## Documentação
 
