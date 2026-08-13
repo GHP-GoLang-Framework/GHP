@@ -60,6 +60,18 @@ func TestParseNodeTypes(t *testing.T) {
 		}
 	})
 
+	t.Run("import ignora item vazio entre virgulas", func(t *testing.T) {
+		prog, err := Parse(`<go:import ("fmt", , "strings")>`)
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		imp := prog.Nodes[0].(*ast.Import)
+		want := []ast.ImportPath{{Path: "fmt"}, {Path: "strings"}}
+		if !reflect.DeepEqual(imp.Paths, want) {
+			t.Errorf("Paths = %#v, want %#v", imp.Paths, want)
+		}
+	})
+
 	t.Run("statement", func(t *testing.T) {
 		prog, err := Parse("<go\n\tx := 1\n>")
 		if err != nil {

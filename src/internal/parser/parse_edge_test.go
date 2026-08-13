@@ -15,6 +15,15 @@ func TestParseEdgeCases(t *testing.T) {
 		{"duplicate default", "<go:switch v>\n<go:default>a\n<go:default>b\n</go:switch>", "line 3: duplicate <go:default>"},
 		{"if greater-than in cond needs parens", `<go:if (a > b)>x</go:if>`, ""},
 		{"unclosed for", `<go:for i := range xs>texto`, "line 1: <go:for> missing </go:for>"},
+		{"import vazio", `<go:import ()>`, "line 1: empty <go:import>"},
+		{"erro propagado de dentro do for", `<go:for i><go:if a>x`, "line 1: <go:if> missing </go:if>"},
+		{"erro propagado do corpo then do if", `<go:if a><go:for i>x`, "line 1: <go:for> missing </go:for>"},
+		{"erro propagado do corpo else do if", `<go:if a>x<go:else><go:for i>y`, "line 1: <go:for> missing </go:for>"},
+		{"if com else mas sem fechar", `<go:if a>x<go:else>y`, "line 1: <go:if> missing </go:if>"},
+		{"erro antes do primeiro case do switch", `<go:switch v><go:if a>x`, "line 1: <go:if> missing </go:if>"},
+		{"erro dentro do corpo de um case", `<go:switch v><go:case 1><go:if a>x`, "line 1: <go:if> missing </go:if>"},
+		{"erro dentro do corpo do default", `<go:switch v><go:default><go:if a>x`, "line 1: <go:if> missing </go:if>"},
+		{"switch sem nenhum case/default/fechamento", `<go:switch v>texto`, "line 1: <go:switch> missing </go:switch>"},
 	}
 
 	for _, tt := range tests {
