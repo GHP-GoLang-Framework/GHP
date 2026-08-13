@@ -26,28 +26,27 @@ Assim `go test -short ./src/...` roda só o rápido e `go test ./src/...` roda t
 
 ## Rodando localmente
 
-Via `Makefile` (mesmos comandos que o CI roda) ou direto com `go`:
+Sem Makefile — comandos Go puros (os mesmos que o CI roda):
 
 ```bash
-make test-unit         # go test -short ./src/... -race
-make test-integration  # go test ./src/test/integration/... -race
-make test-e2e          # builda o binário e roda go test ./src/test/e2e/...
-make test-coverage     # go test ./src/... com coverage, falha se < 90%
+gofmt -l ./src                    # sem saída = formatado
+go vet ./src/...                  # análise estática
+go test -short ./src/... -race    # só testes rápidos (pula integration/e2e)
+go test ./src/test/integration/... -race
+go test ./src/test/e2e/...        # precisa do binário compilado (ver abaixo)
+go build -o bin/ghp ./src/cmd/ghp # builda o binário usado pelos testes e2e
 ```
 
-Os mesmos comandos funcionam sem o Makefile:
+`go test ./src/... -race` roda tudo, incluindo integration/e2e.
 
-```bash
-go test -short ./src/... -race   # só testes rápidos
-go test ./src/... -race          # tudo, incluindo integration/e2e
-```
-
-`test-e2e` builda o binário (`bin/ghp`) antes de rodar, porque os testes de e2e chamam o binário compilado, não o código-fonte diretamente.
+Os testes de e2e vão chamar o binário `ghp` compilado (via `GHP_BINARY`), não o código-fonte diretamente — por isso `go build -o bin/ghp ./src/cmd/ghp` antes. Hoje eles são placeholders que pulam sempre (GHP-14/15).
 
 ## Cobertura
 
 - Mínimo exigido: **90%**, calculado sobre `./src/...` inteiro (`-coverpkg=./src/...` garante que a cobertura conta mesmo quando o teste mora num pacote externo como `src/test/integration`).
-- `make test-coverage` roda local e falha se ficar abaixo do mínimo — é o mesmo cálculo que o job `coverage` do `ci.yml` faz.
+- Comando local:
+  `go test ./src/... -coverprofile=coverage.out -covermode=atomic -coverpkg=./src/...`
+  e depois checar com `go tool cover -func=coverage.out | tail -1` — é o mesmo cálculo que o job `coverage` do `ci.yml` faz.
 - O relatório também sobe pro Codecov (`codecov.yml` define os mesmos 90% como target de `project` e `patch`).
 
 ```bash
