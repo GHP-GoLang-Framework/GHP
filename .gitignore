@@ -33,6 +33,9 @@ tmp/
 bin/
 /ghp
 
+# Husky v9 generates its hook implementations here
+.husky/_/
+
 # Diretório de saída do ghp build/dev (código gerado + artefatos de build)
 .ghp/
 
@@ -42,5 +45,7 @@ node_modules/
 # Editor/IDE
 # .idea/
 # .vscode/
+.DS_Store
 
-*-lock*
+# pnpm lockfile (o projeto usa pnpm para a camada de tooling)
+/pnpm-lock.yaml
