@@ -33,7 +33,7 @@ jobs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
@@ -107,7 +107,7 @@ jobs:
         # O release é fixado no commit certo via `gh release create --target "$SHA"`
         # e via `git checkout "$SHA"` logo abaixo — um checkout local de um commit
         # já presente no histórico confiável, não um fetch de ref externo.
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
