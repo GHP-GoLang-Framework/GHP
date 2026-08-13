@@ -27,6 +27,20 @@ updates:
       prefix: "chore"
       include: "scope"
 
+  # Extensão VSCode — package.json próprio, não coberto pelo npm da raiz.
+  - package-ecosystem: "npm"
+    directory: "/editors/vscode"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
