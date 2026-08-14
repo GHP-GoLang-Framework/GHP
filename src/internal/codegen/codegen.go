@@ -69,6 +69,8 @@ func generateNode(b *strings.Builder, file string, n ast.Node) error {
 		return genIf(b, file, node)
 	case *ast.Switch:
 		return genSwitch(b, file, node)
+	case *ast.For:
+		return genFor(b, file, node)
 	default:
 		return fmt.Errorf("codegen: no generator registered for %T (line %d)", n, n.Line())
 	}

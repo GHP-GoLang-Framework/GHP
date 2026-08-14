@@ -314,6 +314,32 @@ func TestParseNesting(t *testing.T) {
 			t.Fatalf("Body[0] type = %T, want *ast.Switch", forNode.Body[0])
 		}
 	})
+
+	t.Run("for dentro de for", func(t *testing.T) {
+		// Criterio de aceite do GHP-10: "go:for aninhado (loop dentro
+		// de loop)".
+		src := `<go:for _, linha := range matriz><go:for _, cel := range linha><go= cel ></go:for></go:for>`
+		prog, err := Parse(src)
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+
+		outer, ok := prog.Nodes[0].(*ast.For)
+		if !ok {
+			t.Fatalf("node type = %T, want *ast.For", prog.Nodes[0])
+		}
+		if len(outer.Body) != 1 {
+			t.Fatalf("len(outer.Body) = %d, want 1", len(outer.Body))
+		}
+
+		inner, ok := outer.Body[0].(*ast.For)
+		if !ok {
+			t.Fatalf("outer.Body[0] type = %T, want *ast.For", outer.Body[0])
+		}
+		if inner.Expr != "_, cel := range linha" {
+			t.Errorf("Expr = %q, want %q", inner.Expr, "_, cel := range linha")
+		}
+	})
 }
 
 func TestParseTemplateGhp(t *testing.T) {
