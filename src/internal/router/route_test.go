@@ -33,6 +33,7 @@ func TestDeriveFuncName(t *testing.T) {
 	}{
 		{"raiz", "index.ghp", "Index"},
 		{"rota estatica", "sobre.ghp", "Sobre"},
+		{"primeira letra multi-byte capitalizada por rune, nao por byte", "órgão.ghp", "Órgão"},
 		{"index de subpasta mantem Index no nome", "blog/index.ghp", "BlogIndex"},
 		{"rota dinamica sem colchetes no nome", "blog/[slug].ghp", "BlogSlug"},
 		{"hifen vira fronteira de palavra", "minha-pagina.ghp", "MinhaPagina"},

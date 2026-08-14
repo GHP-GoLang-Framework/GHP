@@ -10,7 +10,10 @@
 package router
 
 import (
+	"fmt"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 // deriveRoute converts relPath (a .ghp path relative to the pages
@@ -26,6 +29,9 @@ import (
 // route work); any other segment named "[name]" becomes a dynamic
 // "{name}" segment, using the same syntax net/http's ServeMux (Go 1.22+)
 // already understands - no custom pattern matching needed.
+//
+// relPath's segments are assumed already validated (see validateSegment)
+// - this function doesn't re-check bracket pairing.
 func deriveRoute(relPath string) string {
 	segments := pathSegments(relPath)
 
@@ -33,10 +39,8 @@ func deriveRoute(relPath string) string {
 		segments = segments[:len(segments)-1]
 	}
 	for i, seg := range segments {
-		if param, ok := strings.CutPrefix(seg, "["); ok {
-			if name, ok := strings.CutSuffix(param, "]"); ok {
-				segments[i] = "{" + name + "}"
-			}
+		if strings.HasPrefix(seg, "[") {
+			segments[i] = "{" + seg[1:len(seg)-1] + "}"
 		}
 	}
 
@@ -46,29 +50,43 @@ func deriveRoute(relPath string) string {
 	return "/" + strings.Join(segments, "/")
 }
 
-// deriveFuncName converts the same relative path into a valid, exported
-// Go identifier for the page's handler function, e.g.
-// "blog/[slug].ghp" -> "BlogSlug". Unlike deriveRoute, it keeps "index"
-// segments - the function name should still say what file it came from,
-// so "blog.ghp" and "blog/index.ghp" (which do collide on their route,
-// see Scan) at least don't also collide on their func name.
+// deriveFuncName converts the same relative path into a Go identifier for
+// the page's handler function, e.g. "blog/[slug].ghp" -> "BlogSlug".
+// Unlike deriveRoute, it keeps "index" segments - the function name
+// should still say what file it came from, so "blog.ghp" and
+// "blog/index.ghp" at least don't also collide on their func name just
+// because they collide on their route (Scan checks both, along with
+// GoFile, since none of the three is allowed to collide - see Scan).
+//
+// The result isn't guaranteed to be a valid Go identifier on its own
+// (e.g. a lone numeric segment like "2024.ghp" produces "2024"); Scan
+// checks that before using it.
 func deriveFuncName(relPath string) string {
 	var b strings.Builder
 	for _, seg := range pathSegments(relPath) {
 		seg = strings.Trim(seg, "[]")
 		for _, word := range strings.FieldsFunc(seg, isWordBoundary) {
-			b.WriteString(strings.ToUpper(word[:1]))
-			b.WriteString(word[1:])
+			b.WriteString(capitalizeFirst(word))
 		}
 	}
 	return b.String()
 }
 
-// deriveGoFile converts relPath into a flat, valid filename for the
-// generated .go file, e.g. "blog/[slug].ghp" -> "blog_slug.go". It
-// flattens directories into the name instead of preserving them because
-// a Go package can't span subdirectories, and whether generated pages
-// share one package or several is a decision for whoever assembles the
+// capitalizeFirst uppercases word's first rune and leaves the rest of it
+// untouched. It operates on runes, not bytes: slicing word[:1] instead
+// would split a multi-byte UTF-8 character in half whenever the first
+// character isn't plain ASCII (e.g. an accented letter in a Portuguese
+// filename like "órgão.ghp"), corrupting it into invalid UTF-8.
+func capitalizeFirst(word string) string {
+	r, size := utf8.DecodeRuneInString(word)
+	return string(unicode.ToUpper(r)) + word[size:]
+}
+
+// deriveGoFile converts relPath into a flat filename for the generated
+// .go file, e.g. "blog/[slug].ghp" -> "blog_slug.go". It flattens
+// directories into the name instead of preserving them because a Go
+// package can't span subdirectories, and whether generated pages share
+// one package or several is a decision for whoever assembles the
 // project, not this package.
 func deriveGoFile(relPath string) string {
 	segments := pathSegments(relPath)
@@ -87,4 +105,25 @@ func pathSegments(relPath string) []string {
 
 func isWordBoundary(r rune) bool {
 	return r == '-' || r == '_'
+}
+
+// validateSegment reports whether seg is well-formed enough to derive a
+// route/func name/filename from:
+//   - if it starts with '[' it also has to end with ']', and vice versa -
+//     a typo like "blog/[slug.ghp" (missing "]") would otherwise leak a
+//     literal '[' into the route instead of the "{slug}" the developer
+//     almost certainly meant
+//   - "[]" (an empty parameter name) isn't allowed either, for the same
+//     reason: it would silently become an empty "{}" segment
+func validateSegment(seg string) error {
+	starts := strings.HasPrefix(seg, "[")
+	ends := strings.HasSuffix(seg, "]")
+
+	switch {
+	case starts != ends:
+		return fmt.Errorf("segmento de rota mal formado: %q (colchete sem par)", seg)
+	case starts && len(seg) == 2:
+		return fmt.Errorf("segmento de rota mal formado: %q (nome do parametro vazio)", seg)
+	}
+	return nil
 }
