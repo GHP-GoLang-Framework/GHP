@@ -37,7 +37,7 @@ func Generate(file string, nodes []ast.Node) (string, error) {
 // generateNodes writes each node in nodes to b, in order. Besides backing
 // Generate itself, this is what a tag with a nested body (<go:if>,
 // <go:switch>, <go:for>) calls to render its own Then/Else/Cases/Body -
-// see gen_if.go and gen_for.go for examples.
+// see gen_if.go, gen_switch.go and gen_for.go for examples.
 func generateNodes(b *strings.Builder, file string, nodes []ast.Node) error {
 	for _, n := range nodes {
 		if err := generateNode(b, file, n); err != nil {
@@ -67,9 +67,18 @@ func generateNode(b *strings.Builder, file string, n ast.Node) error {
 		genStatement(b, file, node)
 	case *ast.If:
 		return genIf(b, file, node)
+	case *ast.Switch:
+		return genSwitch(b, file, node)
 	case *ast.For:
 		return genFor(b, file, node)
 	default:
+		// Every concrete type ast.Node currently seals is handled above,
+		// so this is unreachable with real data today - Node can only
+		// be implemented from inside package ast (see its node()
+		// method), so nothing outside this switch can construct a value
+		// that lands here. It stays as a guardrail: if ast ever grows
+		// an 8th node type, this is what stops it from silently
+		// vanishing from generated pages instead of failing loudly.
 		return fmt.Errorf("codegen: no generator registered for %T (line %d)", n, n.Line())
 	}
 	return nil
