@@ -158,6 +158,60 @@ func TestAssembleDedupesUserImportAgainstAuto(t *testing.T) {
 	assertImports(t, f, `"net/http"`, `"fmt"`, `"html"`, `"io"`)
 }
 
+func TestAssembleAliasedImportCollidingWithAutoFails(t *testing.T) {
+	// <go:import (meuio "io")> nao pode ser honrado: genText/genEcho
+	// sempre chamam io.WriteString (o nome padrao), entao um alias
+	// diferente deixaria "meuio" sem nenhum import correspondente no
+	// arquivo final - go build falharia com "undefined: meuio" sem
+	// nenhuma pista de que a causa e um alias em cima de um pacote que
+	// a pagina ja gerencia sozinha.
+	prog := &ast.Program{Nodes: []ast.Node{
+		ast.NewImport([]ast.ImportPath{{Alias: "meuio", Path: "io"}}, 1),
+		ast.NewText("ola", 2),
+	}}
+
+	_, err := Assemble("pages", "Index", "index.ghp", prog)
+	if err == nil {
+		t.Fatal("Assemble() = nil error, want erro de alias em pacote automatico")
+	}
+}
+
+func TestAssembleNestedImportFails(t *testing.T) {
+	// <go:import> dentro do corpo de um go:if nao faz sentido (Go nao
+	// tem import condicional), mas o parser aceita a tag em qualquer
+	// lugar que aceite outras tags - sem essa checagem, o import
+	// simplesmente desaparecia (generateNode trata *ast.Import como
+	// no-op em qualquer profundidade) e qualquer codigo que dependesse
+	// dele so quebraria la na frente, no go build.
+	prog := &ast.Program{Nodes: []ast.Node{
+		ast.NewIf("true",
+			[]ast.Node{ast.NewImport([]ast.ImportPath{{Path: "strings"}}, 2)},
+			nil, 1),
+	}}
+
+	_, err := Assemble("pages", "Index", "index.ghp", prog)
+	if err == nil {
+		t.Fatal("Assemble() = nil error, want erro de <go:import> aninhado")
+	}
+}
+
+func TestAssembleConflictingAliasForSamePathFails(t *testing.T) {
+	// Duas tags <go:import> diferentes para o mesmo pacote, cada uma
+	// com um alias diferente - nao ha como saber qual delas o resto da
+	// pagina espera usar, entao isso e erro em vez de silenciosamente
+	// ficar so com a primeira.
+	prog := &ast.Program{Nodes: []ast.Node{
+		ast.NewImport([]ast.ImportPath{{Alias: "a", Path: "strings"}}, 1),
+		ast.NewImport([]ast.ImportPath{{Alias: "b", Path: "strings"}}, 2),
+		ast.NewText("ola", 3),
+	}}
+
+	_, err := Assemble("pages", "Index", "index.ghp", prog)
+	if err == nil {
+		t.Fatal("Assemble() = nil error, want erro de aliases conflitantes")
+	}
+}
+
 func TestAssembleDedupesRepeatedUserImport(t *testing.T) {
 	// Duas tags <go:import> diferentes declarando o mesmo pacote - so
 	// pode aparecer uma vez no bloco import.
