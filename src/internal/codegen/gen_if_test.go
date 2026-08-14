@@ -54,33 +54,6 @@ func TestGenerateIfWithElse(t *testing.T) {
 	}
 }
 
-func TestGenerateIfPropagatesErrorFromBody(t *testing.T) {
-	// go:for ainda nao tem gerador (GHP-10) - um go:if cujo corpo
-	// contem um go:for tem que propagar esse erro, nao engolir ou gerar
-	// Go quebrado.
-	nodes := []ast.Node{
-		ast.NewIf("a", []ast.Node{ast.NewFor("i := range xs", nil, 2)}, nil, 1),
-	}
-
-	_, err := Generate("p.ghp", nodes)
-	if err == nil {
-		t.Fatal("Generate() = nil error, want erro propagado de dentro do corpo do if")
-	}
-}
-
-func TestGenerateIfPropagatesErrorFromElseBody(t *testing.T) {
-	// Mesma checagem do teste anterior, mas com o erro vindo do corpo
-	// do else em vez do then - sao dois returns distintos em genIf.
-	nodes := []ast.Node{
-		ast.NewIf("a", []ast.Node{ast.NewText("sim", 2)}, []ast.Node{ast.NewFor("i := range xs", nil, 3)}, 1),
-	}
-
-	_, err := Generate("p.ghp", nodes)
-	if err == nil {
-		t.Fatal("Generate() = nil error, want erro propagado de dentro do corpo do else")
-	}
-}
-
 func TestGenerateNestedIfProducesValidGo(t *testing.T) {
 	// Prova de ponta a ponta: go:if dentro de go:if (mesmo recurso que
 	// o parser ja testa em TestParseNesting) tem que virar Go

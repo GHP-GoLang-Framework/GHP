@@ -72,6 +72,13 @@ func generateNode(b *strings.Builder, file string, n ast.Node) error {
 	case *ast.For:
 		return genFor(b, file, node)
 	default:
+		// Every concrete type ast.Node currently seals is handled above,
+		// so this is unreachable with real data today - Node can only
+		// be implemented from inside package ast (see its node()
+		// method), so nothing outside this switch can construct a value
+		// that lands here. It stays as a guardrail: if ast ever grows
+		// an 8th node type, this is what stops it from silently
+		// vanishing from generated pages instead of failing loudly.
 		return fmt.Errorf("codegen: no generator registered for %T (line %d)", n, n.Line())
 	}
 	return nil

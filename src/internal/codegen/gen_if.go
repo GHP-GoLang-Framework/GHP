@@ -15,6 +15,11 @@ import (
 // parens (e.g. to work around the '>' tag-closing ambiguity), the result
 // is valid Go either way - `if (a > b) {` and `if a > b {` mean the same
 // thing to the compiler.
+//
+// The two error returns only fire if Then/Else contain a node type
+// generateNode doesn't handle - with every current ast.Node type
+// supported, that can't happen with real data today; they're there so a
+// future unsupported tag fails loudly instead of being silently dropped.
 func genIf(b *strings.Builder, file string, n *ast.If) error {
 	fmt.Fprintf(b, "//line %s:%d\n", file, n.Line())
 	fmt.Fprintf(b, "if %s {\n", n.Cond)

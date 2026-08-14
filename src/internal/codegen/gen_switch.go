@@ -18,6 +18,12 @@ import (
 // switch already accepts a comma-separated value list; and there's no
 // fallthrough between cases unless the generated code said so explicitly
 // (it never does), matching Go's own switch semantics.
+//
+// The two error returns only fire if a case's or default's body contains
+// a node type generateNode doesn't handle - with every current ast.Node
+// type supported, that can't happen with real data today; they're there
+// so a future unsupported tag fails loudly instead of being silently
+// dropped.
 func genSwitch(b *strings.Builder, file string, n *ast.Switch) error {
 	fmt.Fprintf(b, "//line %s:%d\n", file, n.Line())
 	fmt.Fprintf(b, "switch %s {\n", n.Expr)

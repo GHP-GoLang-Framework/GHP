@@ -90,30 +90,6 @@ func TestGenerateSwitchMultiValueCase(t *testing.T) {
 	}
 }
 
-func TestGenerateSwitchPropagatesErrorFromCaseBody(t *testing.T) {
-	nodes := []ast.Node{
-		ast.NewSwitch("v",
-			[]ast.Case{{Value: "1", Body: []ast.Node{ast.NewFor("i := range xs", nil, 2)}, Line: 2}},
-			nil, 1),
-	}
-
-	_, err := Generate("p.ghp", nodes)
-	if err == nil {
-		t.Fatal("Generate() = nil error, want erro propagado de dentro do corpo do case")
-	}
-}
-
-func TestGenerateSwitchPropagatesErrorFromDefaultBody(t *testing.T) {
-	nodes := []ast.Node{
-		ast.NewSwitch("v", nil, []ast.Node{ast.NewFor("i := range xs", nil, 2)}, 1),
-	}
-
-	_, err := Generate("p.ghp", nodes)
-	if err == nil {
-		t.Fatal("Generate() = nil error, want erro propagado de dentro do corpo do default")
-	}
-}
-
 func TestGenerateSwitchProducesValidGo(t *testing.T) {
 	// Prova de ponta a ponta, mesmo espirito do teste equivalente pro
 	// go:if: o Go gerado e compilado de verdade com go/parser, nao so

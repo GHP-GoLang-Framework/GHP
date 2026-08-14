@@ -70,19 +70,6 @@ func TestGenerateForTraditionalIndex(t *testing.T) {
 	}
 }
 
-func TestGenerateForPropagatesErrorFromBody(t *testing.T) {
-	// go:switch ainda nao tem gerador nesta branch (GHP-9) - um go:for
-	// cujo corpo contem um go:switch tem que propagar o erro.
-	nodes := []ast.Node{
-		ast.NewFor("_, x := range xs", []ast.Node{ast.NewSwitch("x", nil, nil, 2)}, 1),
-	}
-
-	_, err := Generate("p.ghp", nodes)
-	if err == nil {
-		t.Fatal("Generate() = nil error, want erro propagado de dentro do corpo do for")
-	}
-}
-
 func TestGenerateNestedForProducesValidGo(t *testing.T) {
 	// Prova de ponta a ponta: go:for dentro de go:for (o mesmo cenario
 	// que o parser cobre em TestParseNesting) compilado de verdade com
