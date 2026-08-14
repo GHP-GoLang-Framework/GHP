@@ -18,6 +18,11 @@ import (
 // code, so any variable it declares (item, k, v...) is naturally in scope
 // for the tags inside Body, like <go= item.Nome>. There's nothing for
 // codegen to do to make that work; it falls out of emitting real Go.
+//
+// The error return only fires if Body contains a node type generateNode
+// doesn't handle - with every current ast.Node type supported, that can't
+// happen with real data today; it's there so a future unsupported tag
+// fails loudly instead of being silently dropped.
 func genFor(b *strings.Builder, file string, n *ast.For) error {
 	fmt.Fprintf(b, "//line %s:%d\n", file, n.Line())
 	fmt.Fprintf(b, "for %s {\n", n.Expr)
