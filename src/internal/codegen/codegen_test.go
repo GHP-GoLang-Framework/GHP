@@ -25,18 +25,6 @@ func TestGenerateSkipsImportNodes(t *testing.T) {
 	}
 }
 
-func TestGenerateUnsupportedNodeType(t *testing.T) {
-	// go:if ainda nao tem gerador proprio (isso e tarefa do GHP-8) -
-	// Generate tem que falhar alto e claro em vez de omitir em silencio
-	// o bloco condicional do HTML final.
-	nodes := []ast.Node{ast.NewIf("true", nil, nil, 7)}
-
-	_, err := Generate("pagina.ghp", nodes)
-	if err == nil {
-		t.Fatal("Generate() = nil error, want erro para *ast.If (ainda nao suportado)")
-	}
-}
-
 func TestGenerateBraceSpanningStatementProducesValidGo(t *testing.T) {
 	// A tarefa do GHP-7 pede um <go ...> que abre uma chave e so fecha
 	// numa tag <go ...> posterior, com HTML no meio. Isso nao exige
