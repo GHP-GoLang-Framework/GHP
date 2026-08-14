@@ -121,6 +121,14 @@ func buildIf(s *scanner, tok tagToken) (ast.Node, error) {
 
 	var els []ast.Node
 	if close.kind == tagElse {
+		// Chained else-if (<go:else algumacondicao>) isn't supported in
+		// this version - go:else is always bare. Rejecting it here
+		// beats silently discarding whatever the developer wrote after
+		// "go:else", which would otherwise look like it worked.
+		if close.payload != "" {
+			return nil, &SyntaxError{Line: close.line, Message: "<go:else> does not take a condition - chained else-if isn't supported, use nested <go:if> instead"}
+		}
+
 		els, close, err = parseNodes(s, map[tagKind]bool{tagCloseIf: true})
 		if err != nil {
 			return nil, err
