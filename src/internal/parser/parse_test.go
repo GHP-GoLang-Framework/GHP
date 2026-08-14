@@ -60,6 +60,18 @@ func TestParseNodeTypes(t *testing.T) {
 		}
 	})
 
+	t.Run("import de pacote interno do modulo", func(t *testing.T) {
+		prog, err := Parse(`<go:import ("meuapp/internal/db")>`)
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		imp := prog.Nodes[0].(*ast.Import)
+		want := []ast.ImportPath{{Path: "meuapp/internal/db"}}
+		if !reflect.DeepEqual(imp.Paths, want) {
+			t.Errorf("Paths = %#v, want %#v", imp.Paths, want)
+		}
+	})
+
 	t.Run("import ignora item vazio entre virgulas", func(t *testing.T) {
 		prog, err := Parse(`<go:import ("fmt", , "strings")>`)
 		if err != nil {
@@ -156,6 +168,36 @@ func TestParseNodeTypes(t *testing.T) {
 		}
 		if sw.Default == nil {
 			t.Error("Default = nil, want populated")
+		}
+	})
+
+	t.Run("statement com chave aberta e fechada em tags separadas", func(t *testing.T) {
+		// <go ...> nao pareia chaves entre tags - cada tag vira um
+		// Statement independente, e e o proprio go build que vai casar
+		// o "{" desta tag com o "}" da tag mais adiante, ja que os dois
+		// terminam como codigo Go literal e sequencial no arquivo
+		// gerado (ver internal/codegen). O parser nao precisa saber
+		// disso.
+		prog, err := Parse(`<go if usuario.Logado {>ola<go }>`)
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		if len(prog.Nodes) != 3 {
+			t.Fatalf("got %d nodes, want 3 (statement, texto, statement)", len(prog.Nodes))
+		}
+		open, ok := prog.Nodes[0].(*ast.Statement)
+		if !ok {
+			t.Fatalf("node[0] type = %T, want *ast.Statement", prog.Nodes[0])
+		}
+		if open.Code != "if usuario.Logado {" {
+			t.Errorf("Code = %q, want %q", open.Code, "if usuario.Logado {")
+		}
+		close, ok := prog.Nodes[2].(*ast.Statement)
+		if !ok {
+			t.Fatalf("node[2] type = %T, want *ast.Statement", prog.Nodes[2])
+		}
+		if close.Code != "}" {
+			t.Errorf("Code = %q, want %q", close.Code, "}")
 		}
 	})
 
