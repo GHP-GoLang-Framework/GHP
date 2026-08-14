@@ -37,7 +37,7 @@ func Generate(file string, nodes []ast.Node) (string, error) {
 // generateNodes writes each node in nodes to b, in order. Besides backing
 // Generate itself, this is what a tag with a nested body (<go:if>,
 // <go:switch>, <go:for>) calls to render its own Then/Else/Cases/Body -
-// see gen_if.go for the first example.
+// see gen_if.go and gen_switch.go for examples.
 func generateNodes(b *strings.Builder, file string, nodes []ast.Node) error {
 	for _, n := range nodes {
 		if err := generateNode(b, file, n); err != nil {
@@ -67,6 +67,8 @@ func generateNode(b *strings.Builder, file string, n ast.Node) error {
 		genStatement(b, file, node)
 	case *ast.If:
 		return genIf(b, file, node)
+	case *ast.Switch:
+		return genSwitch(b, file, node)
 	default:
 		return fmt.Errorf("codegen: no generator registered for %T (line %d)", n, n.Line())
 	}

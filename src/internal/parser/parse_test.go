@@ -182,6 +182,24 @@ func TestParseNodeTypes(t *testing.T) {
 		}
 	})
 
+	t.Run("switch com multiplos valores no mesmo case", func(t *testing.T) {
+		// Decisao do GHP-9: um go:case aceita varios valores separados
+		// por virgula, igual ao switch do Go (case "a", "b":) - nao
+		// precisa de nenhum tratamento especial aqui porque Case.Value
+		// ja e texto opaco, repassado verbatim pro codegen.
+		prog, err := Parse(`<go:switch v><go:case "a", "b">x</go:switch>`)
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		sw := prog.Nodes[0].(*ast.Switch)
+		if len(sw.Cases) != 1 {
+			t.Fatalf("len(Cases) = %d, want 1", len(sw.Cases))
+		}
+		if sw.Cases[0].Value != `"a", "b"` {
+			t.Errorf("Value = %q, want %q", sw.Cases[0].Value, `"a", "b"`)
+		}
+	})
+
 	t.Run("statement com chave aberta e fechada em tags separadas", func(t *testing.T) {
 		// <go ...> nao pareia chaves entre tags - cada tag vira um
 		// Statement independente, e e o proprio go build que vai casar
