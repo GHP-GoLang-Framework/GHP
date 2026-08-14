@@ -26,14 +26,14 @@ func TestGenerateSkipsImportNodes(t *testing.T) {
 }
 
 func TestGenerateUnsupportedNodeType(t *testing.T) {
-	// go:if ainda nao tem gerador proprio (isso e tarefa do GHP-8) -
+	// go:switch ainda nao tem gerador proprio (isso e tarefa do GHP-9) -
 	// Generate tem que falhar alto e claro em vez de omitir em silencio
-	// o bloco condicional do HTML final.
-	nodes := []ast.Node{ast.NewIf("true", nil, nil, 7)}
+	// o bloco do HTML final.
+	nodes := []ast.Node{ast.NewSwitch("v", nil, nil, 7)}
 
 	_, err := Generate("pagina.ghp", nodes)
 	if err == nil {
-		t.Fatal("Generate() = nil error, want erro para *ast.If (ainda nao suportado)")
+		t.Fatal("Generate() = nil error, want erro para *ast.Switch (ainda nao suportado)")
 	}
 }
 
