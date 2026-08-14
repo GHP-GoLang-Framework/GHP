@@ -143,6 +143,17 @@ func TestParseNodeTypes(t *testing.T) {
 		}
 	})
 
+	t.Run("if com condicao composta", func(t *testing.T) {
+		prog, err := Parse(`<go:if a && b || c>x</go:if>`)
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		ifNode := prog.Nodes[0].(*ast.If)
+		if ifNode.Cond != "a && b || c" {
+			t.Errorf("Cond = %q, want %q", ifNode.Cond, "a && b || c")
+		}
+	})
+
 	t.Run("switch", func(t *testing.T) {
 		src := "<go:switch v>" +
 			"<go:case 1>um" +
