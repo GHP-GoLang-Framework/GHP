@@ -1,16 +1,16 @@
-# Fluxo de Git e Pull Requests
+# Git and Pull Request workflow
 
-Como contribuir com o GHP: branch, commit, PR e review.
+How to contribute to GHP: branch, commit, PR, and review.
 
-## Regra geral
+## General rule
 
-- `main` é protegida — ninguém dá push direto nela.
-- Toda mudança nasce como uma branch a partir da `main` e volta como Pull Request.
-- Todo PR precisa passar no CI **e** ser aprovado por [@castrogusttavo](https://github.com/castrogusttavo) antes do merge.
+- `main` is protected — nobody pushes directly to it.
+- Every change starts as a branch from `main` and comes back as a Pull Request.
+- Every PR must pass CI **and** be approved by [@castrogusttavo](https://github.com/castrogusttavo) before merge.
 
-## Passo a passo
+## Step by step
 
-1. Clone e sincronize a `main`:
+1. Clone and sync `main`:
 
    ```bash
    git clone https://github.com/GHP-GoLang-Framework/GHP.git
@@ -19,51 +19,51 @@ Como contribuir com o GHP: branch, commit, PR e review.
    git pull --ff-only origin main
    ```
 
-2. Crie uma branch a partir da `main`:
+2. Create a branch from `main`:
 
    ```bash
    git checkout -b feat/go-for-tag
    ```
 
-   Nome sugerido: `<tipo>/<descrição-curta>`, usando os mesmos tipos do commit (veja abaixo) — `feat/`, `fix/`, `docs/`, `refactor/`, `test/`, `chore/`, `ci/`, `build/`.
+   Suggested name: `<type>/<short-description>`, using the same types as commits (see below) — `feat/`, `fix/`, `docs/`, `refactor/`, `test/`, `chore/`, `ci/`, `build/`.
 
-3. Faça commits na branch seguindo [Conventional Commits](https://www.conventionalcommits.org/pt-br/) (enforçado localmente por commitlint + Husky):
+3. Commit on the branch following [Conventional Commits](https://www.conventionalcommits.org/en/) (enforced locally by commitlint + Husky):
 
    ```
-   feat(parser): reconhece a tag <go:for expression>
-   fix(codegen): corrige //line directive fora de ordem
+   feat(parser): recognize the <go:for expression> tag
+   fix(codegen): fix out-of-order //line directive
    ```
 
-   Tipos aceitos: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
+   Accepted types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
 
-4. Rode localmente antes de abrir o PR (é o que o CI vai rodar de qualquer forma):
+4. Run locally before opening the PR (it is what CI will run anyway):
 
    ```bash
    gofmt -l ./src && go vet ./src/... && go test -short ./src/... -race
    go test ./src/test/integration/... -race
    ```
 
-5. Suba a branch e abra o PR contra a `main`:
+5. Push the branch and open the PR against `main`:
 
    ```bash
    git push -u origin feat/go-for-tag
-   gh pr create --base main --title "feat(parser): reconhece a tag <go:for expression>"
+   gh pr create --base main --title "feat(parser): recognize the <go:for expression> tag"
    ```
 
-   O **título do PR também precisa ser um Conventional Commit** — é validado automaticamente pelo CI.
+   The **PR title must also be a Conventional Commit** — it is validated automatically by CI.
 
-6. Aguarde o CI (job `gate`: lint, testes unitários, integração, e2e, cobertura mínima de 90%, build, verificação de vulnerabilidades e de segredos) e a aprovação de [@castrogusttavo](https://github.com/castrogusttavo).
+6. Wait for CI (job `gate`: lint, unit tests, integration, e2e, minimum 90% coverage, build, vulnerability and secret scanning) and for approval from [@castrogusttavo](https://github.com/castrogusttavo).
 
-7. Depois de aprovado e verde, o PR é mergeado por **squash** — vira um único commit na `main`, com o título do PR como mensagem.
+7. Once approved and green, the PR is merged by **squash** — it becomes a single commit on `main`, with the PR title as message.
 
-## O que acontece depois do merge
+## What happens after merge
 
-- O merge na `main` dispara o CI de novo e, se verde, publica uma imagem Docker `edge` no GitHub Container Registry.
-- Logo em seguida, uma release é criada **automaticamente**: tag CalVer do dia (`YYYY.MM.DD[.N]`), imagem Docker versionada e GitHub Release com notas geradas a partir dos commits. Não precisa de nenhuma ação manual — todo merge verde na `main` já é uma release.
+- The merge to `main` triggers CI again and, if green, publishes a Docker `edge` image to the GitHub Container Registry.
+- Right after, a release is created **automatically**: a CalVer tag for the day (`YYYY.MM.DD[.N]`), a versioned Docker image, and a GitHub Release with notes generated from the commits. No manual action needed — every green merge to `main` is already a release.
 
-## O que não vai funcionar
+## What will not work
 
-- Push direto na `main` — bloqueado por proteção de branch.
-- PR sem o CI verde.
-- PR sem aprovação.
-- Mensagens de commit fora do Conventional Commits — o hook `commit-msg` bloqueia localmente antes mesmo do push chegar no CI.
+- Direct push to `main` — blocked by branch protection.
+- A PR without green CI.
+- A PR without approval.
+- Commit messages outside Conventional Commits — the `commit-msg` hook blocks locally even before the push reaches CI.
