@@ -3,7 +3,7 @@
 .github
 .husky
 
-# Node (camada de tooling só para husky/commitlint)
+# Node (tooling layer for husky/commitlint only)
 node_modules
 package.json
 package-lock.json
@@ -15,7 +15,7 @@ dist
 *.out
 coverage.*
 
-# Testes
+# Tests
 test
 
 # Dev tools & config
