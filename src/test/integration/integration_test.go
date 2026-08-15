@@ -22,20 +22,20 @@ func TestParseAssembleBuild(t *testing.T) {
 
 	src := `<go:import ("strings")/>
 <go
-	nome := "Mundo"
+	name := "World"
 />
-<h1>Ola, <go= strings.ToUpper(nome) />!</h1>
-<go:if (len(nome) > 3)/>
-<p>Nome longo</p>
+<h1>Hello, <go= strings.ToUpper(name) />!</h1>
+<go:if (len(name) > 3)/>
+<p>Long name</p>
 <go:else/>
-<p>Nome curto</p>
+<p>Short name</p>
 <go:endif/>
 <go:for i := 0; i < 3; i++/>
 <go:switch i/>
 <go:case 0/>
 <p>zero</p>
 <go:default/>
-<p>outro</p>
+<p>other</p>
 <go:endswitch/>
 <go:endfor/>
 `
@@ -52,16 +52,16 @@ func TestParseAssembleBuild(t *testing.T) {
 
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "index.go"), []byte(out), 0o644); err != nil {
-		t.Fatalf("escrever index.go: %v", err)
+		t.Fatalf("write index.go: %v", err)
 	}
 	goMod := "module pages\n\ngo 1.26\n"
 	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte(goMod), 0o644); err != nil {
-		t.Fatalf("escrever go.mod: %v", err)
+		t.Fatalf("write go.mod: %v", err)
 	}
 
 	cmd := exec.Command("go", "build", "./...")
 	cmd.Dir = dir
 	if buildOut, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("go build falhou: %v\n%s\n---\narquivo gerado:\n%s", err, buildOut, out)
+		t.Fatalf("go build failed: %v\n%s\n---\ngenerated file:\n%s", err, buildOut, out)
 	}
 }
