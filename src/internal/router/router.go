@@ -11,10 +11,10 @@ import (
 // the name its handler function will have, and the filename its
 // generated Go source will be written to.
 type Page struct {
-	GhpPath  string // caminho do .ghp relativo ao diretorio escaneado, sempre com '/'
-	Route    string // padrao de rota, ex.: "/blog/{slug}"
-	FuncName string // nome da funcao handler, ex.: "BlogSlug"
-	GoFile   string // nome do .go a ser gerado, ex.: "blog_slug.go"
+	GhpPath  string // .ghp path relative to the scanned directory, always with '/'
+	Route    string // route pattern, e.g. "/blog/{slug}"
+	FuncName string // handler function name, e.g. "BlogSlug"
+	GoFile   string // generated .go filename, e.g. "blog_slug.go"
 }
 
 // ConflictError reports that two different .ghp files derived the same
@@ -24,13 +24,13 @@ type Page struct {
 // a sibling's generated source), so Scan checks all three, not just
 // Route.
 type ConflictError struct {
-	What          string // frase completa e concordada, ex.: "a mesma rota"
+	What          string // full, grammatically correct phrase, e.g. "the same route"
 	Value         string
 	First, Second string
 }
 
 func (e *ConflictError) Error() string {
-	return fmt.Sprintf("%s e %s compartilham %s: %q", e.First, e.Second, e.What, e.Value)
+	return fmt.Sprintf("%s and %s share %s: %q", e.First, e.Second, e.What, e.Value)
 }
 
 // Scan walks dir recursively for *.ghp files and derives a Page for each
@@ -80,17 +80,17 @@ func Scan(dir string) ([]Page, error) {
 		}
 
 		if !token.IsIdentifier(page.FuncName) {
-			return fmt.Errorf("%s: nome de funcao invalido derivado do arquivo: %q", rel, page.FuncName)
+			return fmt.Errorf("%s: invalid function name derived from file: %q", rel, page.FuncName)
 		}
 
 		if other, ok := byRoute[page.Route]; ok {
-			return &ConflictError{What: "a mesma rota", Value: page.Route, First: other, Second: page.GhpPath}
+			return &ConflictError{What: "the same route", Value: page.Route, First: other, Second: page.GhpPath}
 		}
 		if other, ok := byFuncName[page.FuncName]; ok {
-			return &ConflictError{What: "o mesmo nome de funcao", Value: page.FuncName, First: other, Second: page.GhpPath}
+			return &ConflictError{What: "the same function name", Value: page.FuncName, First: other, Second: page.GhpPath}
 		}
 		if other, ok := byGoFile[page.GoFile]; ok {
-			return &ConflictError{What: "o mesmo arquivo .go", Value: page.GoFile, First: other, Second: page.GhpPath}
+			return &ConflictError{What: "the same .go file", Value: page.GoFile, First: other, Second: page.GhpPath}
 		}
 		byRoute[page.Route] = page.GhpPath
 		byFuncName[page.FuncName] = page.GhpPath
