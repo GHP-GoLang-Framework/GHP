@@ -19,8 +19,8 @@ func TestRegisterProducesValidGo(t *testing.T) {
 	}
 
 	fset := token.NewFileSet()
-	if _, err := parser.ParseFile(fset, "gerado.go", out, 0); err != nil {
-		t.Fatalf("saida de Register nao e Go valido: %v\n---\n%s", err, out)
+	if _, err := parser.ParseFile(fset, "generated.go", out, 0); err != nil {
+		t.Fatalf("Register output is not valid Go: %v\n---\n%s", err, out)
 	}
 
 	for _, want := range []string{
@@ -28,15 +28,15 @@ func TestRegisterProducesValidGo(t *testing.T) {
 		`mux.HandleFunc("/blog/{slug}", BlogSlug)`,
 	} {
 		if !strings.Contains(out, want) {
-			t.Errorf("saida nao contem %q:\n%s", want, out)
+			t.Errorf("output does not contain %q:\n%s", want, out)
 		}
 	}
 }
 
 func TestRegisterInvalidPackageNameFails(t *testing.T) {
-	_, err := Register("nome invalido", nil)
+	_, err := Register("invalid name", nil)
 	if err == nil {
-		t.Fatal("Register() = nil error, want erro para pkg invalido")
+		t.Fatal("Register() = nil error, want error for invalid pkg")
 	}
 }
 
@@ -47,7 +47,7 @@ func TestRegisterEmptyPages(t *testing.T) {
 	}
 
 	fset := token.NewFileSet()
-	if _, err := parser.ParseFile(fset, "gerado.go", out, 0); err != nil {
-		t.Fatalf("saida de Register nao e Go valido: %v\n---\n%s", err, out)
+	if _, err := parser.ParseFile(fset, "generated.go", out, 0); err != nil {
+		t.Fatalf("Register output is not valid Go: %v\n---\n%s", err, out)
 	}
 }
