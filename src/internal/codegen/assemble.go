@@ -47,7 +47,7 @@ func Assemble(pkg, funcName, ghpFile string, prog *ast.Program) (string, error) 
 
 	formatted, err := format.Source([]byte(b.String()))
 	if err != nil {
-		return "", fmt.Errorf("codegen: arquivo montado nao e Go valido: %w", err)
+		return "", fmt.Errorf("codegen: assembled file is not valid Go: %w", err)
 	}
 	return string(formatted), nil
 }
@@ -111,7 +111,7 @@ func collectImports(nodes []ast.Node) ([]ast.ImportPath, error) {
 		for _, p := range imp.Paths {
 			if existing, ok := byPath[p.Path]; ok {
 				if existing.Alias != p.Alias {
-					return nil, fmt.Errorf("codegen: %q importado com aliases diferentes (%q e %q)", p.Path, existing.Alias, p.Alias)
+					return nil, fmt.Errorf("codegen: %q imported with different aliases (%q and %q)", p.Path, existing.Alias, p.Alias)
 				}
 				continue
 			}
@@ -121,7 +121,7 @@ func collectImports(nodes []ast.Node) ([]ast.ImportPath, error) {
 	}
 
 	if nested := nestedImport(nodes); nested != nil {
-		return nil, fmt.Errorf("codegen: <go:import> na linha %d nao esta no nivel superior do arquivo - imports condicionais nao existem em Go", nested.Line())
+		return nil, fmt.Errorf("codegen: <go:import> on line %d is not at the top level of the file - conditional imports do not exist in Go", nested.Line())
 	}
 
 	return paths, nil
@@ -197,7 +197,7 @@ func writeImports(b *strings.Builder, need neededImports, userImports []ast.Impo
 	for _, p := range userImports {
 		if autoSet[p.Path] {
 			if p.Alias != "" {
-				return fmt.Errorf("codegen: %q e gerenciado automaticamente pela pagina e nao pode ser importado com alias (%q)", p.Path, p.Alias)
+				return fmt.Errorf("codegen: %q is managed automatically by the page and cannot be imported with an alias (%q)", p.Path, p.Alias)
 			}
 			continue
 		}
