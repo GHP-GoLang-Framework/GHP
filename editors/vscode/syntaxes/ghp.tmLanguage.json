@@ -2,14 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "GHP",
   "scopeName": "source.ghp",
-  "comment": "Gramática do GHP: HTML com tags <go ...> que embutem Go real. A ordem dos padrões em #ghp-tags importa — ver comentário lá.",
+  "comment": "Gramática do GHP: HTML com tags <go .../> que embutem Go real. Toda tag GHP é self-closing (termina com '/>'). A ordem dos padrões em #ghp-tags importa — ver comentário lá.",
   "patterns": [
     { "include": "#ghp-tags" },
     { "include": "text.html.basic" }
   ],
   "repository": {
     "ghp-tags": {
-      "comment": "Ordem obrigatória: as tags mais específicas primeiro. `go:import` antes de `go:*` genérico (senão `import` cairia no padrão de controle), e ambos antes de `go=`/`go` puro.",
+      "comment": "Ordem obrigatória: as tags mais específicas primeiro. `go:import` antes de `go:*` genérico (senão `import` cairia no padrão de controle), o fechamento de bloco antes do controle (senão `endif`/`endswitch`/`endfor` poderiam casar errado), e todos antes de `go=`/`go` puro.",
       "patterns": [
         { "include": "#tag-import" },
         { "include": "#tag-block-close" },
@@ -19,8 +19,14 @@
       ]
     },
 
+    "self-closing": {
+      "comment": "O '/' que fecha a tag — isolado num padrão próprio com lookahead para '>', para que a gramática source.go não o consuma como operador de divisão (o que quebraria o end '(>)' das tags com conteúdo Go).",
+      "match": "/\\s*(?=>)",
+      "name": "punctuation.definition.tag.end.ghp"
+    },
+
     "tag-import": {
-      "comment": "<go:import (\"fmt\")> — um ou mais imports Go.",
+      "comment": "<go:import (\"fmt\")/> — um ou mais imports Go.",
       "name": "meta.tag.import.ghp",
       "begin": "(<)(go:import)(?![\\w:-])",
       "beginCaptures": {
@@ -32,13 +38,16 @@
         "1": { "name": "punctuation.definition.tag.end.ghp" }
       },
       "contentName": "meta.embedded.block.go",
-      "patterns": [{ "include": "source.go" }]
+      "patterns": [
+        { "include": "#self-closing" },
+        { "include": "source.go" }
+      ]
     },
 
     "tag-block-close": {
-      "comment": "</go:if>, </go:switch>, </go:for> — fechamento dos blocos com corpo.",
+      "comment": "<go:endif/>, <go:endswitch/>, <go:endfor/> — fechamento dos blocos com corpo.",
       "name": "meta.tag.close.ghp",
-      "match": "(</)(go:(?:if|switch|for))\\s*(>)",
+      "match": "(<)(go:(?:endif|endswitch|endfor))(/>)",
       "captures": {
         "1": { "name": "punctuation.definition.tag.begin.ghp" },
         "2": { "name": "keyword.control.ghp" },
@@ -47,7 +56,7 @@
     },
 
     "tag-control": {
-      "comment": "Estruturas de controle. `else` e `default` não levam expressão; `if`, `switch`, `case` e `for` levam Go real até o `>`.",
+      "comment": "Estruturas de controle. `else` e `default` não levam expressão; `if`, `switch`, `case` e `for` levam Go real até o '/>'.",
       "name": "meta.tag.control.ghp",
       "begin": "(<)(go:(?:if|else|switch|case|default|for))(?![\\w:-])",
       "beginCaptures": {
@@ -59,11 +68,14 @@
         "1": { "name": "punctuation.definition.tag.end.ghp" }
       },
       "contentName": "meta.embedded.block.go",
-      "patterns": [{ "include": "source.go" }]
+      "patterns": [
+        { "include": "#self-closing" },
+        { "include": "source.go" }
+      ]
     },
 
     "tag-echo": {
-      "comment": "<go= expressao> — renderiza o valor da expressão, com escaping automático.",
+      "comment": "<go= expressao/> — renderiza o valor da expressão, com escaping automático.",
       "name": "meta.tag.echo.ghp",
       "begin": "(<)(go=)",
       "beginCaptures": {
@@ -75,11 +87,14 @@
         "1": { "name": "punctuation.definition.tag.end.ghp" }
       },
       "contentName": "meta.embedded.block.go",
-      "patterns": [{ "include": "source.go" }]
+      "patterns": [
+        { "include": "#self-closing" },
+        { "include": "source.go" }
+      ]
     },
 
     "tag-statement": {
-      "comment": "<go ...> — bloco de código Go (statement), possivelmente multi-linha. O lookahead impede casar com `go:`, `go=` ou identificadores que só começam com `go` (ex.: um literal `<google>` em HTML).",
+      "comment": "<go .../> — bloco de código Go (statement), possivelmente multi-linha. O lookahead impede casar com `go:`, `go=` ou identificadores que só começam com `go` (ex.: um literal `<google>` em HTML).",
       "name": "meta.tag.statement.ghp",
       "begin": "(<)(go)(?![\\w:=-])",
       "beginCaptures": {
@@ -91,7 +106,10 @@
         "1": { "name": "punctuation.definition.tag.end.ghp" }
       },
       "contentName": "meta.embedded.block.go",
-      "patterns": [{ "include": "source.go" }]
+      "patterns": [
+        { "include": "#self-closing" },
+        { "include": "source.go" }
+      ]
     }
   }
 }

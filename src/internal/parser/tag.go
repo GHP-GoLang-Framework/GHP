@@ -29,6 +29,11 @@ const (
 	tagCloseFor
 )
 
+// tagHeads lists every GHP tag head in the order it's tried. Only the head
+// (the fixed keyword right after `<`) lives here; the payload that follows
+// varies per tag and is scanned separately. Close tags (go:endif,
+// go:endswitch, go:endfor) are self-closing like every other tag - they are
+// just heads with an empty payload, so they belong in the same table.
 var tagHeads = []struct {
 	open string
 	kind tagKind
@@ -40,17 +45,11 @@ var tagHeads = []struct {
 	{"go:case", tagCase},
 	{"go:default", tagDefault},
 	{"go:for", tagFor},
+	{"go:endif", tagCloseIf},
+	{"go:endswitch", tagCloseSwitch},
+	{"go:endfor", tagCloseFor},
 	{"go=", tagEcho},
 	{"go", tagStatement},
-}
-
-var closeTagHeads = []struct {
-	open string
-	kind tagKind
-}{
-	{"go:if", tagCloseIf},
-	{"go:switch", tagCloseSwitch},
-	{"go:for", tagCloseFor},
 }
 
 // matchTagHead looks at s (the text right after a `<`) and reports which
@@ -58,15 +57,6 @@ var closeTagHeads = []struct {
 // resumes scanning right after that many bytes for the tag's payload.
 // It returns (tagNone, 0) when s isn't a GHP tag at all.
 func matchTagHead(s string) (kind tagKind, headLen int) {
-	if after, ok := strings.CutPrefix(s, "/"); ok {
-		for _, h := range closeTagHeads {
-			if rest, ok := strings.CutPrefix(after, h.open); ok && boundary(rest) {
-				return h.kind, 1 + len(h.open)
-			}
-		}
-		return tagNone, 0
-	}
-
 	for _, h := range tagHeads {
 		rest, ok := strings.CutPrefix(s, h.open)
 		if !ok {

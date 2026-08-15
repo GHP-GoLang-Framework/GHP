@@ -31,7 +31,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("import", func(t *testing.T) {
-		prog, err := Parse(`<go:import ("fmt")>`)
+		prog, err := Parse(`<go:import ("fmt")/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -46,7 +46,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("import com alias e multiplos paths", func(t *testing.T) {
-		prog, err := Parse("<go:import (\n\tf \"fmt\"\n\t\"strings\"\n)>")
+		prog, err := Parse("<go:import (\n\tf \"fmt\"\n\t\"strings\"\n)/>")
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -61,7 +61,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("import de pacote interno do modulo", func(t *testing.T) {
-		prog, err := Parse(`<go:import ("meuapp/internal/db")>`)
+		prog, err := Parse(`<go:import ("meuapp/internal/db")/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -73,7 +73,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("import ignora item vazio entre virgulas", func(t *testing.T) {
-		prog, err := Parse(`<go:import ("fmt", , "strings")>`)
+		prog, err := Parse(`<go:import ("fmt", , "strings")/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -85,7 +85,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("statement", func(t *testing.T) {
-		prog, err := Parse("<go\n\tx := 1\n>")
+		prog, err := Parse("<go\n\tx := 1\n/>")
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -99,7 +99,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("echo", func(t *testing.T) {
-		prog, err := Parse(`<go= nome >`)
+		prog, err := Parse(`<go= nome />`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -113,7 +113,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("if sem else", func(t *testing.T) {
-		prog, err := Parse(`<go:if a == b>sim</go:if>`)
+		prog, err := Parse(`<go:if a == b/>sim<go:endif/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -133,7 +133,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("if com else", func(t *testing.T) {
-		prog, err := Parse(`<go:if a == b>sim<go:else>nao</go:if>`)
+		prog, err := Parse(`<go:if a == b/>sim<go:else/>nao<go:endif/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -144,7 +144,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("if com condicao composta", func(t *testing.T) {
-		prog, err := Parse(`<go:if a && b || c>x</go:if>`)
+		prog, err := Parse(`<go:if a && b || c/>x<go:endif/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -155,11 +155,11 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("switch", func(t *testing.T) {
-		src := "<go:switch v>" +
-			"<go:case 1>um" +
-			"<go:case 2>dois" +
-			"<go:default>outro" +
-			"</go:switch>"
+		src := "<go:switch v/>" +
+			"<go:case 1/>um" +
+			"<go:case 2/>dois" +
+			"<go:default/>outro" +
+			"<go:endswitch/>"
 		prog, err := Parse(src)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
@@ -187,7 +187,7 @@ func TestParseNodeTypes(t *testing.T) {
 		// por virgula, igual ao switch do Go (case "a", "b":) - nao
 		// precisa de nenhum tratamento especial aqui porque Case.Value
 		// ja e texto opaco, repassado verbatim pro codegen.
-		prog, err := Parse(`<go:switch v><go:case "a", "b">x</go:switch>`)
+		prog, err := Parse(`<go:switch v/><go:case "a", "b"/>x<go:endswitch/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -207,7 +207,7 @@ func TestParseNodeTypes(t *testing.T) {
 		// terminam como codigo Go literal e sequencial no arquivo
 		// gerado (ver internal/codegen). O parser nao precisa saber
 		// disso.
-		prog, err := Parse(`<go if usuario.Logado {>ola<go }>`)
+		prog, err := Parse(`<go if usuario.Logado {/>ola<go }/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -231,7 +231,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("for", func(t *testing.T) {
-		prog, err := Parse(`<go:for i := range items>oi</go:for>`)
+		prog, err := Parse(`<go:for i := range items/>oi<go:endfor/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -250,7 +250,7 @@ func TestParseNodeTypes(t *testing.T) {
 
 func TestParseNesting(t *testing.T) {
 	t.Run("if dentro de for", func(t *testing.T) {
-		src := `<go:for i := range items><go:if i != 0>, </go:if><go= i ></go:for>`
+		src := `<go:for i := range items/><go:if i != 0/>, <go:endif/><go= i /><go:endfor/>`
 		prog, err := Parse(src)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
@@ -278,7 +278,7 @@ func TestParseNesting(t *testing.T) {
 	})
 
 	t.Run("for dentro de if", func(t *testing.T) {
-		src := `<go:if show><go:for i := range items><go= i ></go:for></go:if>`
+		src := `<go:if show/><go:for i := range items/><go= i /><go:endfor/><go:endif/>`
 		prog, err := Parse(src)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
@@ -297,7 +297,7 @@ func TestParseNesting(t *testing.T) {
 	})
 
 	t.Run("switch dentro de for", func(t *testing.T) {
-		src := `<go:for i := range items><go:switch i><go:case 0>zero</go:switch></go:for>`
+		src := `<go:for i := range items/><go:switch i/><go:case 0/>zero<go:endswitch/><go:endfor/>`
 		prog, err := Parse(src)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
@@ -318,7 +318,7 @@ func TestParseNesting(t *testing.T) {
 	t.Run("for dentro de for", func(t *testing.T) {
 		// Criterio de aceite do GHP-10: "go:for aninhado (loop dentro
 		// de loop)".
-		src := `<go:for _, linha := range matriz><go:for _, cel := range linha><go= cel ></go:for></go:for>`
+		src := `<go:for _, linha := range matriz/><go:for _, cel := range linha/><go= cel /><go:endfor/><go:endfor/>`
 		prog, err := Parse(src)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)

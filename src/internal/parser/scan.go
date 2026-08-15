@@ -63,7 +63,7 @@ func (s *scanner) nextText() (node *ast.Text, ok bool) {
 
 // nextTagToken asusmes s.pos sits on the '<' of a recognized tag (the
 // caller checks this via matchTagHead, as nextText already does) and
-// consumes through the closing '<', returning the tag's kind, payload and
+// consumes through the closing '/>', returning the tag's kind, payload and
 // starting line.
 func (s *scanner) nextTagToken() (tagToken, error) {
 	line := s.line
@@ -72,10 +72,17 @@ func (s *scanner) nextTagToken() (tagToken, error) {
 
 	closeIdx := findTagClose(s.src, payloadStart)
 	if closeIdx == -1 {
-		return tagToken{}, &SyntaxError{Line: line, Message: "tag not closed with '>'"}
+		return tagToken{}, &SyntaxError{Line: line, Message: "tag not closed with '/>"}
 	}
 
 	payload := strings.TrimSpace(s.src[payloadStart:closeIdx])
+	// Every GHP tag is self-closing: the '/' right before the '>' is the
+	// closing marker, not part of the payload. Strip it (and any whitespace
+	// it carries) so <go:if cond/> yields "cond", not "cond/".
+	if !strings.HasSuffix(payload, "/") {
+		return tagToken{}, &SyntaxError{Line: line, Message: "tag not closed with '/>"}
+	}
+	payload = strings.TrimSpace(strings.TrimSuffix(payload, "/"))
 	s.advance(closeIdx + 1 - s.pos)
 
 	return tagToken{kind: kind, payload: payload, line: line}, nil

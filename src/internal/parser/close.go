@@ -4,7 +4,7 @@ package parser
 // tag's head, e.g. right after "go:if") for the '>' that closes the tag.
 //
 // A '>' inside (), [] or a quoted string doesn't count - this lets
-// conditions like <go:if (a > b)> and <go:for i := range []int{1, 2}> use
+// conditions like <go:if (a > b)/> and <go:for i := range []int{1, 2}/> use
 // those characters without prematurely closing the tag.
 //
 // '{'/'}' are deliberately NOT tracked here, unlike '(...)'/'[...]': a

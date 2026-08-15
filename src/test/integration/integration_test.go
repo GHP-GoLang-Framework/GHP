@@ -20,24 +20,24 @@ func TestParseAssembleBuild(t *testing.T) {
 		t.Skip("skipped in short mode (go test -short)")
 	}
 
-	src := `<go:import ("strings")>
+	src := `<go:import ("strings")/>
 <go
 	nome := "Mundo"
->
-<h1>Ola, <go= strings.ToUpper(nome) >!</h1>
-<go:if (len(nome) > 3)>
+/>
+<h1>Ola, <go= strings.ToUpper(nome) />!</h1>
+<go:if (len(nome) > 3)/>
 <p>Nome longo</p>
-<go:else>
+<go:else/>
 <p>Nome curto</p>
-</go:if>
-<go:for i := 0; i < 3; i++>
-<go:switch i>
-<go:case 0>
+<go:endif/>
+<go:for i := 0; i < 3; i++/>
+<go:switch i/>
+<go:case 0/>
 <p>zero</p>
-<go:default>
+<go:default/>
 <p>outro</p>
-</go:switch>
-</go:for>
+<go:endswitch/>
+<go:endfor/>
 `
 
 	prog, err := parser.Parse(src)

@@ -56,7 +56,7 @@ async function loadGrammar() {
 }
 
 // tokenize roda a gramática sobre `source` e devolve [{text, scopes}], com o
-// estado de linha encadeado — necessário para tags multi-linha como <go ... >.
+// estado de linha encadeado — necessário para tags multi-linha como <go .../>.
 function tokenize(grammar, source) {
   const out = [];
   let ruleStack = textmate.INITIAL;
@@ -68,7 +68,7 @@ function tokenize(grammar, source) {
       if (text.trim() === '') continue;
       // O texto é comparado sem as bordas em branco: a gramática costuma
       // devolver o conteúdo Go junto com o espaço que o separa da tag
-      // (ex.: `<go:if cond>` produz " cond"), e esse espaço não é relevante.
+      // (ex.: `<go:if cond/>` produz " cond"), e esse espaço não é relevante.
       out.push({ text: text.trim(), scopes: token.scopes });
     }
     ruleStack = result.ruleStack;
@@ -95,19 +95,19 @@ function assertEmbeddedGo(tokens, text) {
 
 const tests = {
   'reconhece <go:import> e marca o conteúdo como Go'(grammar) {
-    const tokens = tokenize(grammar, '<go:import ("fmt")>');
+    const tokens = tokenize(grammar, '<go:import ("fmt")/>');
     assertScope(tokens, 'go:import', 'keyword.control.import.ghp');
     assertEmbeddedGo(tokens, '("fmt")');
   },
 
   'reconhece <go= ...> como echo'(grammar) {
-    const tokens = tokenize(grammar, '<title><go= expression ></title>');
+    const tokens = tokenize(grammar, '<title><go= expression /></title>');
     assertScope(tokens, 'go=', 'keyword.control.echo.ghp');
     assertEmbeddedGo(tokens, 'expression');
   },
 
-  'reconhece bloco <go ...> multi-linha'(grammar) {
-    const tokens = tokenize(grammar, '<go\n    items := []string{"a"}\n>');
+  'reconhece bloco <go .../> multi-linha'(grammar) {
+    const tokens = tokenize(grammar, '<go\n    items := []string{"a"}\n/>');
     assertScope(tokens, 'go', 'keyword.control.ghp');
     assertEmbeddedGo(tokens, 'items := []string{"a"}');
   },
@@ -115,20 +115,19 @@ const tests = {
   'reconhece go:if / go:else / fechamento'(grammar) {
     const tokens = tokenize(
       grammar,
-      '<go:if variable == value>\n  x\n<go:else>\n  y\n</go:if>',
+      '<go:if variable == value/>\n  x\n<go:else/>\n  y\n<go:endif/>',
     );
     assertScope(tokens, 'go:if', 'keyword.control.ghp');
     assertEmbeddedGo(tokens, 'variable == value');
     assertScope(tokens, 'go:else', 'keyword.control.ghp');
-    // O fechamento aparece como token próprio, com o mesmo escopo de controle.
-    const close = tokens.filter((t) => t.text === 'go:if');
-    assert.strictEqual(close.length, 2, 'esperado <go:if> de abertura e </go:if> de fechamento');
+    // O fechamento é uma tag própria com o mesmo escopo de controle.
+    assertScope(tokens, 'go:endif', 'keyword.control.ghp');
   },
 
   'reconhece switch/case/default'(grammar) {
     const tokens = tokenize(
       grammar,
-      '<go:switch variable>\n<go:case value>\n<go:default>\n</go:switch>',
+      '<go:switch variable/>\n<go:case value/>\n<go:default/>\n<go:endswitch/>',
     );
     assertScope(tokens, 'go:switch', 'keyword.control.ghp');
     assertScope(tokens, 'go:case', 'keyword.control.ghp');
@@ -137,7 +136,7 @@ const tests = {
   },
 
   'reconhece go:for'(grammar) {
-    const tokens = tokenize(grammar, '<go:for _, item := range items>\n</go:for>');
+    const tokens = tokenize(grammar, '<go:for _, item := range items/>\n<go:endfor/>');
     assertScope(tokens, 'go:for', 'keyword.control.ghp');
     assertEmbeddedGo(tokens, '_, item := range items');
   },
@@ -152,7 +151,7 @@ const tests = {
   },
 
   'não trata go:import como tag de controle'(grammar) {
-    const tokens = tokenize(grammar, '<go:import ("fmt")>');
+    const tokens = tokenize(grammar, '<go:import ("fmt")/>');
     const token = tokens.find((t) => t.text === 'go:import');
     assert.ok(
       !token.scopes.includes('meta.tag.control.ghp'),
@@ -171,10 +170,13 @@ const tests = {
       'go=',
       'go:if',
       'go:else',
+      'go:endif',
       'go:switch',
       'go:case',
       'go:default',
+      'go:endswitch',
       'go:for',
+      'go:endfor',
     ]) {
       const found = tokens.find(
         (t) => t.text === tag && t.scopes.some((s) => s.startsWith('keyword.control')),
