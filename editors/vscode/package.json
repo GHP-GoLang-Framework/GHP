@@ -1,7 +1,7 @@
 {
   "name": "ghp",
   "displayName": "GHP",
-  "description": "Realce de sintaxe para arquivos .ghp — HTML com Go real embutido.",
+  "description": "Syntax highlighting for .ghp files — HTML with real embedded Go.",
   "version": "0.1.0",
   "publisher": "ghp-golang-framework",
   "license": "MIT",

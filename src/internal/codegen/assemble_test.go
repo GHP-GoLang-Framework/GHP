@@ -18,9 +18,9 @@ import (
 func parseAssembled(t *testing.T, out string) *goast.File {
 	t.Helper()
 	fset := token.NewFileSet()
-	f, err := goparser.ParseFile(fset, "gerado.go", out, 0)
+	f, err := goparser.ParseFile(fset, "generated.go", out, 0)
 	if err != nil {
-		t.Fatalf("saida de Assemble nao e Go valido: %v\n---\n%s", err, out)
+		t.Fatalf("Assemble output is not valid Go: %v\n---\n%s", err, out)
 	}
 	return f
 }
@@ -35,7 +35,7 @@ func assertImports(t *testing.T, f *goast.File, want ...string) {
 		got = append(got, imp.Path.Value)
 	}
 	if len(got) != len(want) {
-		t.Fatalf("imports = %v, want exatamente %v", got, want)
+		t.Fatalf("imports = %v, want exactly %v", got, want)
 	}
 	for _, w := range want {
 		found := false
@@ -46,13 +46,13 @@ func assertImports(t *testing.T, f *goast.File, want ...string) {
 			}
 		}
 		if !found {
-			t.Errorf("import %s ausente; imports = %v", w, got)
+			t.Errorf("import %s missing; imports = %v", w, got)
 		}
 	}
 }
 
 func TestAssembleOnlyText(t *testing.T) {
-	prog := &ast.Program{Nodes: []ast.Node{ast.NewText("ola", 1)}}
+	prog := &ast.Program{Nodes: []ast.Node{ast.NewText("hi", 1)}}
 
 	out, err := Assemble("pages", "Index", "index.ghp", prog)
 	if err != nil {
@@ -63,17 +63,17 @@ func TestAssembleOnlyText(t *testing.T) {
 	if f.Name.Name != "pages" {
 		t.Errorf("package = %q, want %q", f.Name.Name, "pages")
 	}
-	// Text so precisa de io - fmt/html ficam de fora porque nao ha
-	// nenhum <go=...> na pagina.
+	// Text only needs io - fmt/html stay out because there is no
+	// <go=...> in the page.
 	assertImports(t, f, `"net/http"`, `"io"`)
 
 	if !strings.Contains(out, "func Index(w http.ResponseWriter, r *http.Request) {") {
-		t.Errorf("assinatura da funcao nao encontrada em:\n%s", out)
+		t.Errorf("function signature not found in:\n%s", out)
 	}
 }
 
 func TestAssembleEcho(t *testing.T) {
-	prog := &ast.Program{Nodes: []ast.Node{ast.NewEcho("nome", 1)}}
+	prog := &ast.Program{Nodes: []ast.Node{ast.NewEcho("name", 1)}}
 
 	out, err := Assemble("pages", "Index", "index.ghp", prog)
 	if err != nil {
@@ -85,9 +85,9 @@ func TestAssembleEcho(t *testing.T) {
 }
 
 func TestAssembleNoOutputNeedsOnlyHTTP(t *testing.T) {
-	// Uma pagina sem nenhum <go=...> nem texto puro (so um statement)
-	// nao precisa de fmt/html/io - so net/http, pela assinatura da
-	// funcao.
+	// A page with no <go=...> and no plain text (only a statement)
+	// does not need fmt/html/io - only net/http, for the function
+	// signature.
 	prog := &ast.Program{Nodes: []ast.Node{ast.NewStatement("_ = 1", 1)}}
 
 	out, err := Assemble("pages", "Index", "index.ghp", prog)
@@ -102,7 +102,7 @@ func TestAssembleNoOutputNeedsOnlyHTTP(t *testing.T) {
 func TestAssembleUserImport(t *testing.T) {
 	prog := &ast.Program{Nodes: []ast.Node{
 		ast.NewImport([]ast.ImportPath{{Path: "strings"}}, 1),
-		ast.NewText("ola", 2),
+		ast.NewText("hi", 2),
 	}}
 
 	out, err := Assemble("pages", "Index", "index.ghp", prog)
@@ -117,7 +117,7 @@ func TestAssembleUserImport(t *testing.T) {
 func TestAssembleUserImportWithAlias(t *testing.T) {
 	prog := &ast.Program{Nodes: []ast.Node{
 		ast.NewImport([]ast.ImportPath{{Alias: "s", Path: "strings"}}, 1),
-		ast.NewText("ola", 2),
+		ast.NewText("hi", 2),
 	}}
 
 	out, err := Assemble("pages", "Index", "index.ghp", prog)
@@ -131,22 +131,22 @@ func TestAssembleUserImportWithAlias(t *testing.T) {
 		if imp.Path.Value == `"strings"` {
 			found = true
 			if imp.Name == nil || imp.Name.Name != "s" {
-				t.Errorf("alias do import strings = %v, want \"s\"", imp.Name)
+				t.Errorf("strings import alias = %v, want \"s\"", imp.Name)
 			}
 		}
 	}
 	if !found {
-		t.Fatal("import \"strings\" ausente")
+		t.Fatal("import \"strings\" missing")
 	}
 }
 
 func TestAssembleDedupesUserImportAgainstAuto(t *testing.T) {
-	// A pagina declara <go:import ("fmt")> explicitamente, mas o echo
-	// tambem precisa de fmt automaticamente - so pode aparecer uma vez
-	// no bloco import, ou o arquivo gerado nem compila.
+	// The page declares <go:import ("fmt")> explicitly, but the echo
+	// also needs fmt automatically - it can only appear once in the
+	// import block, or the generated file won't compile.
 	prog := &ast.Program{Nodes: []ast.Node{
 		ast.NewImport([]ast.ImportPath{{Path: "fmt"}}, 1),
-		ast.NewEcho("nome", 2),
+		ast.NewEcho("name", 2),
 	}}
 
 	out, err := Assemble("pages", "Index", "index.ghp", prog)
@@ -159,30 +159,30 @@ func TestAssembleDedupesUserImportAgainstAuto(t *testing.T) {
 }
 
 func TestAssembleAliasedImportCollidingWithAutoFails(t *testing.T) {
-	// <go:import (meuio "io")> nao pode ser honrado: genText/genEcho
-	// sempre chamam io.WriteString (o nome padrao), entao um alias
-	// diferente deixaria "meuio" sem nenhum import correspondente no
-	// arquivo final - go build falharia com "undefined: meuio" sem
-	// nenhuma pista de que a causa e um alias em cima de um pacote que
-	// a pagina ja gerencia sozinha.
+	// <go:import (myio "io")> cannot be honored: genText/genEcho
+	// always call io.WriteString (the default name), so a different
+	// alias would leave "myio" with no matching import in the final
+	// file - go build would fail with "undefined: myio" and no clue
+	// that the cause is an alias on top of a package the page already
+	// manages on its own.
 	prog := &ast.Program{Nodes: []ast.Node{
-		ast.NewImport([]ast.ImportPath{{Alias: "meuio", Path: "io"}}, 1),
-		ast.NewText("ola", 2),
+		ast.NewImport([]ast.ImportPath{{Alias: "myio", Path: "io"}}, 1),
+		ast.NewText("hi", 2),
 	}}
 
 	_, err := Assemble("pages", "Index", "index.ghp", prog)
 	if err == nil {
-		t.Fatal("Assemble() = nil error, want erro de alias em pacote automatico")
+		t.Fatal("Assemble() = nil error, want alias error on automatic package")
 	}
 }
 
 func TestAssembleNestedImportFails(t *testing.T) {
-	// <go:import> dentro do corpo de um go:if nao faz sentido (Go nao
-	// tem import condicional), mas o parser aceita a tag em qualquer
-	// lugar que aceite outras tags - sem essa checagem, o import
-	// simplesmente desaparecia (generateNode trata *ast.Import como
-	// no-op em qualquer profundidade) e qualquer codigo que dependesse
-	// dele so quebraria la na frente, no go build.
+	// <go:import> inside a go:if body makes no sense (Go has no
+	// conditional import), but the parser accepts the tag anywhere it
+	// accepts other tags - without this check, the import would simply
+	// disappear (generateNode treats *ast.Import as a no-op at any
+	// depth) and any code depending on it would only break later, at
+	// go build.
 	prog := &ast.Program{Nodes: []ast.Node{
 		ast.NewIf("true",
 			[]ast.Node{ast.NewImport([]ast.ImportPath{{Path: "strings"}}, 2)},
@@ -191,34 +191,34 @@ func TestAssembleNestedImportFails(t *testing.T) {
 
 	_, err := Assemble("pages", "Index", "index.ghp", prog)
 	if err == nil {
-		t.Fatal("Assemble() = nil error, want erro de <go:import> aninhado")
+		t.Fatal("Assemble() = nil error, want nested <go:import> error")
 	}
 }
 
 func TestAssembleConflictingAliasForSamePathFails(t *testing.T) {
-	// Duas tags <go:import> diferentes para o mesmo pacote, cada uma
-	// com um alias diferente - nao ha como saber qual delas o resto da
-	// pagina espera usar, entao isso e erro em vez de silenciosamente
-	// ficar so com a primeira.
+	// Two different <go:import> tags for the same package, each with a
+	// different alias - there is no way to tell which one the rest of
+	// the page expects to use, so this is an error instead of silently
+	// keeping only the first one.
 	prog := &ast.Program{Nodes: []ast.Node{
 		ast.NewImport([]ast.ImportPath{{Alias: "a", Path: "strings"}}, 1),
 		ast.NewImport([]ast.ImportPath{{Alias: "b", Path: "strings"}}, 2),
-		ast.NewText("ola", 3),
+		ast.NewText("hi", 3),
 	}}
 
 	_, err := Assemble("pages", "Index", "index.ghp", prog)
 	if err == nil {
-		t.Fatal("Assemble() = nil error, want erro de aliases conflitantes")
+		t.Fatal("Assemble() = nil error, want conflicting aliases error")
 	}
 }
 
 func TestAssembleDedupesRepeatedUserImport(t *testing.T) {
-	// Duas tags <go:import> diferentes declarando o mesmo pacote - so
-	// pode aparecer uma vez no bloco import.
+	// Two different <go:import> tags declaring the same package - it
+	// can only appear once in the import block.
 	prog := &ast.Program{Nodes: []ast.Node{
 		ast.NewImport([]ast.ImportPath{{Path: "strings"}}, 1),
 		ast.NewImport([]ast.ImportPath{{Path: "strings"}}, 2),
-		ast.NewText("ola", 3),
+		ast.NewText("hi", 3),
 	}}
 
 	out, err := Assemble("pages", "Index", "index.ghp", prog)
@@ -231,10 +231,10 @@ func TestAssembleDedupesRepeatedUserImport(t *testing.T) {
 }
 
 func TestAssembleInvalidFuncNameFails(t *testing.T) {
-	prog := &ast.Program{Nodes: []ast.Node{ast.NewText("ola", 1)}}
+	prog := &ast.Program{Nodes: []ast.Node{ast.NewText("hi", 1)}}
 
-	_, err := Assemble("pages", "nome invalido", "index.ghp", prog)
+	_, err := Assemble("pages", "invalid name", "index.ghp", prog)
 	if err == nil {
-		t.Fatal("Assemble() = nil error, want erro para funcName invalido")
+		t.Fatal("Assemble() = nil error, want error for invalid funcName")
 	}
 }

@@ -5,17 +5,17 @@ module.exports = {
       2,
       'always',
       [
-        'feat',     // Nova funcionalidade
-        'fix',      // Correção de bug
-        'docs',     // Documentação
-        'style',    // Formatação, gofmt, etc.
-        'refactor', // Refatoração de código
-        'perf',     // Melhorias de performance
-        'test',     // Adição ou ajuste de testes
-        'build',    // Mudanças no sistema de build (go.mod, Dockerfile, Makefile)
-        'ci',       // Mudanças em arquivos de CI/CD
-        'chore',    // Outras mudanças que não modificam src ou test
-        'revert',   // Reverter um commit anterior
+        'feat',     // New feature
+        'fix',      // Bug fix
+        'docs',     // Documentation
+        'style',    // Formatting, gofmt, etc.
+        'refactor', // Code refactoring
+        'perf',     // Performance improvements
+        'test',     // Adding or adjusting tests
+        'build',    // Changes to the build system (go.mod, Dockerfile, Makefile)
+        'ci',       // Changes to CI/CD files
+        'chore',    // Other changes that do not touch src or test
+        'revert',   // Revert a previous commit
       ],
     ],
     'type-case': [2, 'always', 'lower-case'],

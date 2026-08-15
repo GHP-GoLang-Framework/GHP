@@ -8,12 +8,12 @@ func TestDeriveRoute(t *testing.T) {
 		relPath string
 		want    string
 	}{
-		{"raiz", "index.ghp", "/"},
-		{"rota estatica", "sobre.ghp", "/sobre"},
-		{"index de subpasta", "blog/index.ghp", "/blog"},
-		{"rota dinamica", "blog/[slug].ghp", "/blog/{slug}"},
-		{"aninhada sem index", "blog/2024/resumo.ghp", "/blog/2024/resumo"},
-		{"multiplos parametros dinamicos", "loja/[categoria]/[produto].ghp", "/loja/{categoria}/{produto}"},
+		{"root", "index.ghp", "/"},
+		{"static route", "about.ghp", "/about"},
+		{"subfolder index", "blog/index.ghp", "/blog"},
+		{"dynamic route", "blog/[slug].ghp", "/blog/{slug}"},
+		{"nested without index", "blog/2024/summary.ghp", "/blog/2024/summary"},
+		{"multiple dynamic parameters", "store/[category]/[product].ghp", "/store/{category}/{product}"},
 	}
 
 	for _, tt := range tests {
@@ -31,13 +31,13 @@ func TestDeriveFuncName(t *testing.T) {
 		relPath string
 		want    string
 	}{
-		{"raiz", "index.ghp", "Index"},
-		{"rota estatica", "sobre.ghp", "Sobre"},
-		{"primeira letra multi-byte capitalizada por rune, nao por byte", "órgão.ghp", "Órgão"},
-		{"index de subpasta mantem Index no nome", "blog/index.ghp", "BlogIndex"},
-		{"rota dinamica sem colchetes no nome", "blog/[slug].ghp", "BlogSlug"},
-		{"hifen vira fronteira de palavra", "minha-pagina.ghp", "MinhaPagina"},
-		{"underscore vira fronteira de palavra", "outra_pagina.ghp", "OutraPagina"},
+		{"root", "index.ghp", "Index"},
+		{"static route", "about.ghp", "About"},
+		{"first multi-byte letter capitalized by rune, not byte", "órgão.ghp", "Órgão"},
+		{"subfolder index keeps Index in the name", "blog/index.ghp", "BlogIndex"},
+		{"dynamic route without brackets in the name", "blog/[slug].ghp", "BlogSlug"},
+		{"hyphen becomes a word boundary", "my-page.ghp", "MyPage"},
+		{"underscore becomes a word boundary", "other_page.ghp", "OtherPage"},
 	}
 
 	for _, tt := range tests {
@@ -55,10 +55,10 @@ func TestDeriveGoFile(t *testing.T) {
 		relPath string
 		want    string
 	}{
-		{"raiz", "index.ghp", "index.go"},
-		{"rota estatica", "sobre.ghp", "sobre.go"},
-		{"subpasta achatada com underscore", "blog/index.ghp", "blog_index.go"},
-		{"colchetes removidos", "blog/[slug].ghp", "blog_slug.go"},
+		{"root", "index.ghp", "index.go"},
+		{"static route", "about.ghp", "about.go"},
+		{"subfolder flattened with underscore", "blog/index.ghp", "blog_index.go"},
+		{"brackets removed", "blog/[slug].ghp", "blog_slug.go"},
 	}
 
 	for _, tt := range tests {

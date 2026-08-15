@@ -1,5 +1,5 @@
-# Formata apenas os arquivos .go staged e os re-adiciona ao index, depois
-# roda vet no repositório inteiro (equivalente ao gofmt+tsc do fluxo do Nexo).
+# Formats only the staged .go files and re-stages them, then runs vet
+# on the whole repository (equivalent to the gofmt+tsc of the Nexo flow).
 staged_go_files=$(git diff --cached --name-only --diff-filter=ACM -- '*.go')
 
 if [ -n "$staged_go_files" ]; then

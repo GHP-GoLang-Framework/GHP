@@ -1,11 +1,11 @@
 name: CD
 
-# Publica uma imagem "edge" a cada push em main que passar no CI, e cria
-# automaticamente uma release CalVer (YYYY.MM.DD[.N]) logo em seguida — mesmo
-# padrão do Nexo: a tag marca quando aquele build ficou disponível, criada
-# depois do publish, não antes. release.yml cobre só o caso de alguém
-# taguear uma CalVer manualmente (este job usa GITHUB_TOKEN, que não dispara
-# outros workflows, então a criação da release acontece aqui mesmo).
+# Publishes an "edge" image on every push to main that passes CI, and creates
+# a CalVer release (YYYY.MM.DD[.N]) automatically right after — same pattern
+# as Nexo: the tag marks when that build became available, created after the
+# publish, not before. release.yml only covers the case of someone tagging a
+# CalVer manually (this job uses GITHUB_TOKEN, which does not trigger other
+# workflows, so release creation happens here).
 on:
   workflow_run:
     workflows: ['CI']
@@ -42,8 +42,8 @@ jobs:
 
       - name: Lowercase image name
         id: lowercase
-        # GHCR exige nome de imagem em minúsculas; github.repository preserva
-        # o case real do repositório (ex.: GHP-GoLang-Framework/GHP).
+        # GHCR requires lowercase image names; github.repository preserves
+        # the repo's actual case (e.g.: GHP-GoLang-Framework/GHP).
         run: |
           IMAGE=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_NAME=$IMAGE" >> "$GITHUB_ENV"
@@ -101,29 +101,29 @@ jobs:
       packages: write
     steps:
       - name: Checkout repository
-        # Checkout do branch padrão (main), não do head_sha do workflow_run:
-        # este job roda com contents:write, e dar checkout do ref não-confiável
-        # do evento seria um "pwn request" (Semgrep workflow-run-target-code-checkout).
-        # O release é fixado no commit certo via `gh release create --target "$SHA"`
-        # e via `git checkout "$SHA"` logo abaixo — um checkout local de um commit
-        # já presente no histórico confiável, não um fetch de ref externo.
+        # Checkout of the default branch (main), not the workflow_run head_sha:
+        # this job runs with contents:write, and checking out the untrusted
+        # event ref would be a "pwn request" (Semgrep workflow-run-target-code-checkout).
+        # The release is pinned to the right commit via `gh release create --target "$SHA"`
+        # and via `git checkout "$SHA"` right below — a local checkout of a commit
+        # already present in the trusted history, not a fetch of an external ref.
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Checkout do commit exato liberado
+      - name: Checkout the exact released commit
         run: git checkout "${{ github.event.workflow_run.head_sha }}"
 
       - name: Compute CalVer tag
         id: tag
         run: |
-          # CalVer YYYY.MM.DD[.N] (UTC). Primeira release do dia sem sufixo;
-          # releases seguintes no mesmo dia ganham .1, .2, ...
+          # CalVer YYYY.MM.DD[.N] (UTC). First release of the day without a
+          # suffix; later releases on the same day get .1, .2, ...
           TODAY=$(date -u +%Y.%m.%d)
           EXISTING=$(git tag --list "$TODAY" "$TODAY.*" | wc -l)
           if [ "$EXISTING" -eq 0 ]; then TAG="$TODAY"; else TAG="$TODAY.$EXISTING"; fi
-          echo "Releasing $TAG (existentes hoje: $EXISTING)"
+          echo "Releasing $TAG (existing today: $EXISTING)"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Setup Go
@@ -164,7 +164,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create tag, imagem versionada e GitHub Release
+      - name: Create tag, versioned image and GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ github.event.workflow_run.head_sha }}
@@ -172,14 +172,14 @@ jobs:
           IMAGE: ${{ env.REGISTRY }}/${{ needs.publish-edge-image.outputs.image }}
           DIGEST: ${{ needs.publish-edge-image.outputs.digest }}
         run: |
-          # Retagueia a imagem já buildada e escaneada no job anterior (por
-          # digest, sem rebuild) com a versão CalVer e "latest".
+          # Retags the image already built and scanned in the previous job (by
+          # digest, no rebuild) with the CalVer version and "latest".
           docker buildx imagetools create \
             -t "$IMAGE:$TAG" \
             -t "$IMAGE:latest" \
             "$IMAGE@$DIGEST"
 
-          # gh cria a tag em $SHA e a release juntos, com os binários
-          # multi-plataforma como assets; --generate-notes monta o corpo a
-          # partir dos commits/PRs desde a release anterior.
+          # gh creates the tag at $SHA and the release together, with the
+          # multi-platform binaries as assets; --generate-notes builds the body
+          # from the commits/PRs since the previous release.
           gh release create "$TAG" --target "$SHA" --title "$TAG" --generate-notes dist/*

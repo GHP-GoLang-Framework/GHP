@@ -10,8 +10,8 @@ func TestMatchTagHead(t *testing.T) {
 		wantHeadLen int
 	}{
 		{"import", `go:import ("fmt")/>`, tagImport, len("go:import")},
-		{"echo", `go= expressao />`, tagEcho, len("go=")},
-		{"statement", `go codigo />`, tagStatement, len("go")},
+		{"echo", `go= expression />`, tagEcho, len("go=")},
+		{"statement", `go code />`, tagStatement, len("go")},
 		{"if", `go:if a == b/>`, tagIf, len("go:if")},
 		{"else", `go:else/>`, tagElse, len("go:else")},
 		{"switch", `go:switch v/>`, tagSwitch, len("go:switch")},
@@ -22,15 +22,15 @@ func TestMatchTagHead(t *testing.T) {
 		{"close switch", `go:endswitch/>`, tagCloseSwitch, len("go:endswitch")},
 		{"close for", `go:endfor/>`, tagCloseFor, len("go:endfor")},
 
-		// Cabecalho que termina exatamente no fim da string, sem nada
-		// depois (nem o '/>') - cobre o ramo `rest == ""` de boundary e
-		// statementBoundary, que o '/>' presente em todo caso acima nunca
-		// exercita.
-		{"else no fim absoluto da string", `go:else`, tagElse, len("go:else")},
-		{"go no fim absoluto da string", `go`, tagStatement, len("go")},
+		// Head that ends exactly at the end of the string, with nothing
+		// after (not even the '/>') - covers the `rest == ""` branch of
+		// boundary and statementBoundary, which the '/>' present in every
+		// case above never exercises.
+		{"else at the absolute end of the string", `go:else`, tagElse, len("go:else")},
+		{"go at the absolute end of the string", `go`, tagStatement, len("go")},
 
-		// Casos que NÃO são tags GHP — são o motivo de existir a checagem
-		// de fronteira, não só o "acontece de funcionar".
+		// Cases that are NOT GHP tags - they are the reason the
+		// boundary check exists, not just "it happens to work".
 		{"html element starting with go", `google-maps>`, tagNone, 0},
 		{"identifier longer than go:if", `go:iffy/>`, tagNone, 0},
 		{"identifier longer than go:for", `go:format/>`, tagNone, 0},

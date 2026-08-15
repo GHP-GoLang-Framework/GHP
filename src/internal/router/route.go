@@ -21,9 +21,9 @@ import (
 // pattern it maps to:
 //
 //	index.ghp        -> /
-//	sobre.ghp         -> /sobre
-//	blog/index.ghp    -> /blog
-//	blog/[slug].ghp   -> /blog/{slug}
+//	about.ghp        -> /about
+//	blog/index.ghp   -> /blog
+//	blog/[slug].ghp  -> /blog/{slug}
 //
 // A trailing "index" segment is dropped (it's what makes a folder's own
 // route work); any other segment named "[name]" becomes a dynamic
@@ -121,9 +121,9 @@ func validateSegment(seg string) error {
 
 	switch {
 	case starts != ends:
-		return fmt.Errorf("segmento de rota mal formado: %q (colchete sem par)", seg)
+		return fmt.Errorf("malformed route segment: %q (unpaired bracket)", seg)
 	case starts && len(seg) == 2:
-		return fmt.Errorf("segmento de rota mal formado: %q (nome do parametro vazio)", seg)
+		return fmt.Errorf("malformed route segment: %q (empty parameter name)", seg)
 	}
 	return nil
 }

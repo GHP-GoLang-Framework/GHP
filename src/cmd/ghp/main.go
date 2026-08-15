@@ -10,8 +10,8 @@ func main() {
 	os.Exit(run(os.Args[1:], os.Stdout))
 }
 
-// run executa o comando ghp e retorna o exit code — separado de main() para
-// ser testável sem derrubar o processo de teste com os.Exit.
+// run executes the ghp command and returns the exit code — separated from
+// main() so it can be tested without killing the test process with os.Exit.
 func run(args []string, stdout io.Writer) int {
 	if len(args) < 1 {
 		printUsage(stdout)

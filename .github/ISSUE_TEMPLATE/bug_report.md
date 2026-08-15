@@ -1,25 +1,25 @@
 ---
 name: Bug report
-about: Reportar um comportamento incorreto no GHP
+about: Report incorrect behavior in GHP
 title: "fix: "
 labels: Bug
 ---
 
-## Comportamento esperado
+## Expected behavior
 
-## Comportamento atual
+## Actual behavior
 
-## Exemplo mínimo para reproduzir
+## Minimal example to reproduce
 
-<!-- Cole aqui o menor .ghp/comando que reproduz o problema -->
+<!-- Paste the smallest .ghp/command that reproduces the problem -->
 
 ```
 ```
 
-## Ambiente
+## Environment
 
-- Versão do `ghp` (`ghp version` ou commit/tag): 
-- Sistema operacional:
-- Versão do Go (`go version`):
+- `ghp` version (`ghp version` or commit/tag): 
+- Operating system:
+- Go version (`go version`):
 
-## Contexto adicional
+## Additional context

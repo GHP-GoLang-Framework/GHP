@@ -25,7 +25,7 @@ func writePages(t *testing.T, dir string, relPaths ...string) {
 
 func TestScanDerivesPagesForEachFile(t *testing.T) {
 	dir := t.TempDir()
-	writePages(t, dir, "index.ghp", "sobre.ghp", "blog/[slug].ghp")
+	writePages(t, dir, "index.ghp", "about.ghp", "blog/[slug].ghp")
 
 	pages, err := Scan(dir)
 	if err != nil {
@@ -43,8 +43,8 @@ func TestScanDerivesPagesForEachFile(t *testing.T) {
 	if got := byGhpPath["index.ghp"]; got.Route != "/" || got.FuncName != "Index" {
 		t.Errorf("index.ghp = %+v", got)
 	}
-	if got := byGhpPath["sobre.ghp"]; got.Route != "/sobre" || got.FuncName != "Sobre" {
-		t.Errorf("sobre.ghp = %+v", got)
+	if got := byGhpPath["about.ghp"]; got.Route != "/about" || got.FuncName != "About" {
+		t.Errorf("about.ghp = %+v", got)
 	}
 	if got := byGhpPath["blog/[slug].ghp"]; got.Route != "/blog/{slug}" || got.FuncName != "BlogSlug" {
 		t.Errorf("blog/[slug].ghp = %+v", got)
@@ -79,11 +79,11 @@ func TestScanEmptyDir(t *testing.T) {
 
 func TestScanPropagatesWalkErrors(t *testing.T) {
 	if os.Getuid() == 0 {
-		t.Skip("rodando como root, permissao 0000 nao bloqueia a leitura")
+		t.Skip("running as root, permission 0000 does not block reads")
 	}
 
 	dir := t.TempDir()
-	blocked := filepath.Join(dir, "sem-permissao")
+	blocked := filepath.Join(dir, "no-permission")
 	if err := os.Mkdir(blocked, 0o755); err != nil {
 		t.Fatalf("Mkdir: %v", err)
 	}
@@ -94,110 +94,110 @@ func TestScanPropagatesWalkErrors(t *testing.T) {
 	t.Cleanup(func() { os.Chmod(blocked, 0o755) })
 
 	if _, err := Scan(dir); err == nil {
-		t.Fatal("Scan() = nil error, want erro de permissao propagado")
+		t.Fatal("Scan() = nil error, want propagated permission error")
 	}
 }
 
 func TestScanDetectsRouteConflict(t *testing.T) {
-	// blog.ghp -> /blog e blog/index.ghp -> /blog: duas paginas
-	// diferentes, mesma rota - consequencia direta da convencao de
-	// dropar "index", nao um bug isolado.
+	// blog.ghp -> /blog and blog/index.ghp -> /blog: two different
+	// pages, same route - a direct consequence of the "drop index"
+	// convention, not an isolated bug.
 	dir := t.TempDir()
 	writePages(t, dir, "blog.ghp", "blog/index.ghp")
 
 	_, err := Scan(dir)
 	if err == nil {
-		t.Fatal("Scan() = nil error, want conflito de rota")
+		t.Fatal("Scan() = nil error, want route conflict")
 	}
 
 	var conflict *ConflictError
 	if !errors.As(err, &conflict) {
-		t.Fatalf("erro = %T, want *ConflictError", err)
+		t.Fatalf("error = %T, want *ConflictError", err)
 	}
 	if conflict.Value != "/blog" {
 		t.Errorf("Value = %q, want %q", conflict.Value, "/blog")
 	}
 
-	// filepath.WalkDir visita "blog/" (diretorio) antes de "blog.ghp" no
-	// mesmo nivel - "blog" e prefixo de "blog.ghp", entao vem primeiro
-	// na ordem lexical - e desce nela por completo antes de continuar,
-	// entao "blog/index.ghp" e descoberto primeiro.
-	want := `blog/index.ghp e blog.ghp compartilham a mesma rota: "/blog"`
+	// filepath.WalkDir visits "blog/" (directory) before "blog.ghp" at
+	// the same level - "blog" is a prefix of "blog.ghp", so it comes
+	// first in lexical order - and descends into it completely before
+	// continuing, so "blog/index.ghp" is discovered first.
+	want := `blog/index.ghp and blog.ghp share the same route: "/blog"`
 	if conflict.Error() != want {
 		t.Errorf("Error() = %q, want %q", conflict.Error(), want)
 	}
 }
 
 func TestScanDetectsFuncNameConflict(t *testing.T) {
-	// blog-post.ghp e blog_post.ghp derivam rotas diferentes
-	// (/blog-post e /blog_post, sem conflito ali), mas hifen e
-	// underscore viram a mesma fronteira de palavra em deriveFuncName -
-	// as duas colidem em "BlogPost". Sem checar FuncName tambem, o
-	// segundo <go:import> gerado nunca compilaria (func redeclarada).
+	// blog-post.ghp and blog_post.ghp derive different routes
+	// (/blog-post and /blog_post, no conflict there), but hyphen and
+	// underscore become the same word boundary in deriveFuncName - the
+	// two collide on "BlogPost". Without also checking FuncName, the
+	// second generated <go:import> would never compile (redeclared
+	// function).
 	dir := t.TempDir()
 	writePages(t, dir, "blog-post.ghp", "blog_post.ghp")
 
 	_, err := Scan(dir)
 	if err == nil {
-		t.Fatal("Scan() = nil error, want conflito de nome de funcao")
+		t.Fatal("Scan() = nil error, want function name conflict")
 	}
 
 	var conflict *ConflictError
 	if !errors.As(err, &conflict) {
-		t.Fatalf("erro = %T, want *ConflictError", err)
+		t.Fatalf("error = %T, want *ConflictError", err)
 	}
 	if conflict.Value != "BlogPost" {
 		t.Errorf("Value = %q, want %q", conflict.Value, "BlogPost")
 	}
 }
 
-func TestScanDetectsGoFileConflict(t *testing.T) {
-	// blog_post.ghp (raiz) e blog/post.ghp (subpasta) derivam rotas
-	// diferentes (/blog_post e /blog/post, sem conflito ali), mas
-	// deriveGoFile achata os dois pro mesmo "blog_post.go" - sem checar
-	// GoFile tambem, um dos dois arquivos gerados sobrescreveria o
-	// outro em silencio. Esse mesmo par tambem colide em FuncName (as
-	// duas derivacoes tratam "_" como fronteira de palavra do mesmo
-	// jeito, entao um "_" dentro de um segmento e indistinguivel de uma
-	// barra separando dois segmentos) - Scan reporta o primeiro
-	// conflito que encontra, que aqui e o de nome de funcao. O ponto
-	// deste teste nao e qual campo especifico e citado, e sim que o
-	// par e detectado como conflito - antes desta checagem, nenhum dos
-	// dois disparava erro nenhum.
+func TestScanDetectsUnderscoreSlashFuncNameConflict(t *testing.T) {
+	// blog_post.ghp (root) and blog/post.ghp (subfolder) derive
+	// different routes (/blog_post and /blog/post, no conflict there),
+	// but both derive the same FuncName "BlogPost", because a "_" inside
+	// one segment is indistinguishable from a "/" separating two
+	// segments. They also derive the same GoFile ("blog_post.go"), yet
+	// Scan only needs the FuncName check to reject the pair: GoFile is a
+	// function of the same joined segments that define FuncName, so any
+	// GoFile collision is necessarily a FuncName collision too.
 	dir := t.TempDir()
 	writePages(t, dir, "blog_post.ghp", "blog/post.ghp")
 
 	_, err := Scan(dir)
 	if err == nil {
-		t.Fatal("Scan() = nil error, want conflito (func name ou go file)")
+		t.Fatal("Scan() = nil error, want func name conflict")
 	}
 
 	var conflict *ConflictError
 	if !errors.As(err, &conflict) {
-		t.Fatalf("erro = %T, want *ConflictError", err)
+		t.Fatalf("error = %T, want *ConflictError", err)
+	}
+	if conflict.Value != "BlogPost" {
+		t.Errorf("Value = %q, want %q", conflict.Value, "BlogPost")
 	}
 }
 
 func TestScanRejectsInvalidFuncName(t *testing.T) {
-	// "2024.ghp" sozinho (sem outro segmento de caminho pra dar uma
-	// letra inicial) deriva FuncName "2024" - um literal numerico
-	// valido em Go, mas nao um identificador valido. Sem essa checagem,
-	// Register geraria "mux.HandleFunc(\"/2024\", 2024)": sintaxe Go
-	// valida, mas semanticamente quebrada, so descoberta la na frente
-	// com `go build`.
+	// "2024.ghp" on its own (without another path segment to give it a
+	// leading letter) derives FuncName "2024" - a valid Go numeric
+	// literal, but not a valid identifier. Without this check, Register
+	// would generate "mux.HandleFunc(\"/2024\", 2024)": valid Go
+	// syntax, but semantically broken, only discovered later with
+	// `go build`.
 	dir := t.TempDir()
 	writePages(t, dir, "2024.ghp")
 
 	if _, err := Scan(dir); err == nil {
-		t.Fatal("Scan() = nil error, want erro de nome de funcao invalido")
+		t.Fatal("Scan() = nil error, want invalid function name error")
 	}
 }
 
 func TestScanRejectsMalformedDynamicSegment(t *testing.T) {
 	tests := []string{
-		"blog/[slug.ghp", // falta o ']'
-		"blog/slug].ghp", // falta o '['
-		"blog/[].ghp",    // nome do parametro vazio
+		"blog/[slug.ghp", // missing the ']'
+		"blog/slug].ghp", // missing the '['
+		"blog/[].ghp",    // empty parameter name
 	}
 
 	for _, rel := range tests {
@@ -206,7 +206,7 @@ func TestScanRejectsMalformedDynamicSegment(t *testing.T) {
 			writePages(t, dir, rel)
 
 			if _, err := Scan(dir); err == nil {
-				t.Fatalf("Scan() = nil error para %q, want erro de segmento mal formado", rel)
+				t.Fatalf("Scan() = nil error for %q, want malformed segment error", rel)
 			}
 		})
 	}

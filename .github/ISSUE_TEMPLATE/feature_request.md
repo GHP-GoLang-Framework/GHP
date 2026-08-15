@@ -1,18 +1,18 @@
 ---
 name: Feature request
-about: Sugerir uma funcionalidade ou melhoria para o GHP
+about: Suggest a feature or improvement for GHP
 title: "feat: "
 labels: Feature
 ---
 
-## Problema que isso resolve
+## Problem this solves
 
-<!-- Que dificuldade real motiva esse pedido? -->
+<!-- What real difficulty motivates this request? -->
 
-## Proposta
+## Proposal
 
-<!-- Como você imagina que isso funcionaria -->
+<!-- How you imagine it would work -->
 
-## Alternativas consideradas
+## Alternatives considered
 
-## Contexto adicional
+## Additional context

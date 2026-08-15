@@ -11,7 +11,7 @@ import (
 
 func TestParseNodeTypes(t *testing.T) {
 	t.Run("text", func(t *testing.T) {
-		prog, err := Parse("ola mundo")
+		prog, err := Parse("hello world")
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -22,8 +22,8 @@ func TestParseNodeTypes(t *testing.T) {
 		if !ok {
 			t.Fatalf("node type = %T, want *ast.Text", prog.Nodes[0])
 		}
-		if text.Value != "ola mundo" {
-			t.Errorf("Value = %q, want %q", text.Value, "ola mundo")
+		if text.Value != "hello world" {
+			t.Errorf("Value = %q, want %q", text.Value, "hello world")
 		}
 		if text.Line() != 1 {
 			t.Errorf("Line() = %d, want 1", text.Line())
@@ -45,7 +45,7 @@ func TestParseNodeTypes(t *testing.T) {
 		}
 	})
 
-	t.Run("import com alias e multiplos paths", func(t *testing.T) {
+	t.Run("import with alias and multiple paths", func(t *testing.T) {
 		prog, err := Parse("<go:import (\n\tf \"fmt\"\n\t\"strings\"\n)/>")
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
@@ -60,19 +60,19 @@ func TestParseNodeTypes(t *testing.T) {
 		}
 	})
 
-	t.Run("import de pacote interno do modulo", func(t *testing.T) {
-		prog, err := Parse(`<go:import ("meuapp/internal/db")/>`)
+	t.Run("import of module-internal package", func(t *testing.T) {
+		prog, err := Parse(`<go:import ("myapp/internal/db")/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
 		imp := prog.Nodes[0].(*ast.Import)
-		want := []ast.ImportPath{{Path: "meuapp/internal/db"}}
+		want := []ast.ImportPath{{Path: "myapp/internal/db"}}
 		if !reflect.DeepEqual(imp.Paths, want) {
 			t.Errorf("Paths = %#v, want %#v", imp.Paths, want)
 		}
 	})
 
-	t.Run("import ignora item vazio entre virgulas", func(t *testing.T) {
+	t.Run("import skips empty item between commas", func(t *testing.T) {
 		prog, err := Parse(`<go:import ("fmt", , "strings")/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
@@ -99,7 +99,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("echo", func(t *testing.T) {
-		prog, err := Parse(`<go= nome />`)
+		prog, err := Parse(`<go= name />`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -107,13 +107,13 @@ func TestParseNodeTypes(t *testing.T) {
 		if !ok {
 			t.Fatalf("node type = %T, want *ast.Echo", prog.Nodes[0])
 		}
-		if echo.Expr != "nome" {
-			t.Errorf("Expr = %q, want %q", echo.Expr, "nome")
+		if echo.Expr != "name" {
+			t.Errorf("Expr = %q, want %q", echo.Expr, "name")
 		}
 	})
 
-	t.Run("if sem else", func(t *testing.T) {
-		prog, err := Parse(`<go:if a == b/>sim<go:endif/>`)
+	t.Run("if without else", func(t *testing.T) {
+		prog, err := Parse(`<go:if a == b/>yes<go:endif/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -132,18 +132,18 @@ func TestParseNodeTypes(t *testing.T) {
 		}
 	})
 
-	t.Run("if com else", func(t *testing.T) {
-		prog, err := Parse(`<go:if a == b/>sim<go:else/>nao<go:endif/>`)
+	t.Run("if with else", func(t *testing.T) {
+		prog, err := Parse(`<go:if a == b/>yes<go:else/>no<go:endif/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
 		ifNode := prog.Nodes[0].(*ast.If)
 		if len(ifNode.Then) != 1 || len(ifNode.Else) != 1 {
-			t.Fatalf("Then=%d Else=%d, want 1 e 1", len(ifNode.Then), len(ifNode.Else))
+			t.Fatalf("Then=%d Else=%d, want 1 and 1", len(ifNode.Then), len(ifNode.Else))
 		}
 	})
 
-	t.Run("if com condicao composta", func(t *testing.T) {
+	t.Run("if with compound condition", func(t *testing.T) {
 		prog, err := Parse(`<go:if a && b || c/>x<go:endif/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
@@ -156,9 +156,9 @@ func TestParseNodeTypes(t *testing.T) {
 
 	t.Run("switch", func(t *testing.T) {
 		src := "<go:switch v/>" +
-			"<go:case 1/>um" +
-			"<go:case 2/>dois" +
-			"<go:default/>outro" +
+			"<go:case 1/>one" +
+			"<go:case 2/>two" +
+			"<go:default/>other" +
 			"<go:endswitch/>"
 		prog, err := Parse(src)
 		if err != nil {
@@ -182,11 +182,11 @@ func TestParseNodeTypes(t *testing.T) {
 		}
 	})
 
-	t.Run("switch com multiplos valores no mesmo case", func(t *testing.T) {
-		// Decisao do GHP-9: um go:case aceita varios valores separados
-		// por virgula, igual ao switch do Go (case "a", "b":) - nao
-		// precisa de nenhum tratamento especial aqui porque Case.Value
-		// ja e texto opaco, repassado verbatim pro codegen.
+	t.Run("switch with multiple values in the same case", func(t *testing.T) {
+		// GHP-9 decision: a go:case accepts several comma-separated
+		// values, just like Go's switch (case "a", "b":) - no special
+		// handling needed here because Case.Value is already opaque
+		// text, passed verbatim to codegen.
 		prog, err := Parse(`<go:switch v/><go:case "a", "b"/>x<go:endswitch/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
@@ -200,26 +200,26 @@ func TestParseNodeTypes(t *testing.T) {
 		}
 	})
 
-	t.Run("statement com chave aberta e fechada em tags separadas", func(t *testing.T) {
-		// <go ...> nao pareia chaves entre tags - cada tag vira um
-		// Statement independente, e e o proprio go build que vai casar
-		// o "{" desta tag com o "}" da tag mais adiante, ja que os dois
-		// terminam como codigo Go literal e sequencial no arquivo
-		// gerado (ver internal/codegen). O parser nao precisa saber
-		// disso.
-		prog, err := Parse(`<go if usuario.Logado {/>ola<go }/>`)
+	t.Run("statement with brace opened and closed in separate tags", func(t *testing.T) {
+		// <go .../> does not pair braces between tags - each tag
+		// becomes an independent Statement, and it is go build itself
+		// that matches the "{" of this tag with the "}" of a later
+		// tag, since both end up as literal, sequential Go code in
+		// the generated file (see internal/codegen). The parser does
+		// not need to know about this.
+		prog, err := Parse(`<go if user.LoggedIn {/>hi<go }/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
 		if len(prog.Nodes) != 3 {
-			t.Fatalf("got %d nodes, want 3 (statement, texto, statement)", len(prog.Nodes))
+			t.Fatalf("got %d nodes, want 3 (statement, text, statement)", len(prog.Nodes))
 		}
 		open, ok := prog.Nodes[0].(*ast.Statement)
 		if !ok {
 			t.Fatalf("node[0] type = %T, want *ast.Statement", prog.Nodes[0])
 		}
-		if open.Code != "if usuario.Logado {" {
-			t.Errorf("Code = %q, want %q", open.Code, "if usuario.Logado {")
+		if open.Code != "if user.LoggedIn {" {
+			t.Errorf("Code = %q, want %q", open.Code, "if user.LoggedIn {")
 		}
 		close, ok := prog.Nodes[2].(*ast.Statement)
 		if !ok {
@@ -231,7 +231,7 @@ func TestParseNodeTypes(t *testing.T) {
 	})
 
 	t.Run("for", func(t *testing.T) {
-		prog, err := Parse(`<go:for i := range items/>oi<go:endfor/>`)
+		prog, err := Parse(`<go:for i := range items/>hi<go:endfor/>`)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
@@ -249,7 +249,7 @@ func TestParseNodeTypes(t *testing.T) {
 }
 
 func TestParseNesting(t *testing.T) {
-	t.Run("if dentro de for", func(t *testing.T) {
+	t.Run("if inside for", func(t *testing.T) {
 		src := `<go:for i := range items/><go:if i != 0/>, <go:endif/><go= i /><go:endfor/>`
 		prog, err := Parse(src)
 		if err != nil {
@@ -277,7 +277,7 @@ func TestParseNesting(t *testing.T) {
 		}
 	})
 
-	t.Run("for dentro de if", func(t *testing.T) {
+	t.Run("for inside if", func(t *testing.T) {
 		src := `<go:if show/><go:for i := range items/><go= i /><go:endfor/><go:endif/>`
 		prog, err := Parse(src)
 		if err != nil {
@@ -296,7 +296,7 @@ func TestParseNesting(t *testing.T) {
 		}
 	})
 
-	t.Run("switch dentro de for", func(t *testing.T) {
+	t.Run("switch inside for", func(t *testing.T) {
 		src := `<go:for i := range items/><go:switch i/><go:case 0/>zero<go:endswitch/><go:endfor/>`
 		prog, err := Parse(src)
 		if err != nil {
@@ -315,10 +315,10 @@ func TestParseNesting(t *testing.T) {
 		}
 	})
 
-	t.Run("for dentro de for", func(t *testing.T) {
-		// Criterio de aceite do GHP-10: "go:for aninhado (loop dentro
-		// de loop)".
-		src := `<go:for _, linha := range matriz/><go:for _, cel := range linha/><go= cel /><go:endfor/><go:endfor/>`
+	t.Run("for inside for", func(t *testing.T) {
+		// GHP-10 acceptance criterion: "nested go:for (loop inside
+		// loop)".
+		src := `<go:for _, row := range matrix/><go:for _, cell := range row/><go= cell /><go:endfor/><go:endfor/>`
 		prog, err := Parse(src)
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
@@ -336,8 +336,8 @@ func TestParseNesting(t *testing.T) {
 		if !ok {
 			t.Fatalf("outer.Body[0] type = %T, want *ast.For", outer.Body[0])
 		}
-		if inner.Expr != "_, cel := range linha" {
-			t.Errorf("Expr = %q, want %q", inner.Expr, "_, cel := range linha")
+		if inner.Expr != "_, cell := range row" {
+			t.Errorf("Expr = %q, want %q", inner.Expr, "_, cell := range row")
 		}
 	})
 }
@@ -345,12 +345,12 @@ func TestParseNesting(t *testing.T) {
 func TestParseTemplateGhp(t *testing.T) {
 	data, err := os.ReadFile("../../../docs/template.ghp")
 	if err != nil {
-		t.Fatalf("nao consegui ler docs/template.ghp: %v", err)
+		t.Fatalf("could not read docs/template.ghp: %v", err)
 	}
 
 	prog, err := Parse(string(data))
 	if err != nil {
-		t.Fatalf("Parse(docs/template.ghp) falhou: %v", err)
+		t.Fatalf("Parse(docs/template.ghp) failed: %v", err)
 	}
 
 	wantKinds := []string{
@@ -359,7 +359,7 @@ func TestParseTemplateGhp(t *testing.T) {
 		"*ast.Switch", "*ast.Text", "*ast.For", "*ast.Text",
 	}
 	if len(prog.Nodes) != len(wantKinds) {
-		t.Fatalf("got %d nos de topo, want %d", len(prog.Nodes), len(wantKinds))
+		t.Fatalf("got %d top-level nodes, want %d", len(prog.Nodes), len(wantKinds))
 	}
 	for i, n := range prog.Nodes {
 		got := fmt.Sprintf("%T", n)

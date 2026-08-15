@@ -16,7 +16,7 @@ import (
 // developer wrote - `i := 0; i < n; i++`, `_, item := range slice`,
 // `k, v := range m` - becomes the real `for` header in the generated
 // code, so any variable it declares (item, k, v...) is naturally in scope
-// for the tags inside Body, like <go= item.Nome>. There's nothing for
+// for the tags inside Body, like <go= item.Name>. There's nothing for
 // codegen to do to make that work; it falls out of emitting real Go.
 //
 // The error return only fires if Body contains a node type generateNode

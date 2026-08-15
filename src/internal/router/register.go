@@ -29,7 +29,7 @@ func Register(pkg string, pages []Page) (string, error) {
 
 	formatted, err := format.Source([]byte(b.String()))
 	if err != nil {
-		return "", fmt.Errorf("router: arquivo gerado nao e Go valido: %w", err)
+		return "", fmt.Errorf("router: generated file is not valid Go: %w", err)
 	}
 	return string(formatted), nil
 }
