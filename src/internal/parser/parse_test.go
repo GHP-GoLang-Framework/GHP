@@ -205,7 +205,7 @@ func TestParseNodeTypes(t *testing.T) {
 		// becomes an independent Statement, and it is go build itself
 		// that matches the "{" of this tag with the "}" of a later
 		// tag, since both end up as literal, sequential Go code in
-		// the generated file (see internal/codegen). The parser does
+		// the generated file (see internal/transpiler/codegen). The parser does
 		// not need to know about this.
 		prog, err := Parse(`<go if user.LoggedIn {/>hi<go }/>`)
 		if err != nil {

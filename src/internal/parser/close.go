@@ -9,7 +9,7 @@ package parser
 //
 // '{'/'}' are deliberately NOT tracked here, unlike '(...)'/'[...]': a
 // <go ...> statement is allowed to open a brace that only closes in a
-// later <go ...> tag, with HTML in between (see internal/codegen, which is
+// later <go ...> tag, with HTML in between (see internal/transpiler/codegen, which is
 // what actually pairs them - by emitting each tag's code verbatim, in
 // order, and letting go build do the matching). If '{' paused closing the
 // way '('/'[' do, that first tag would never find its own '>' at all.
