@@ -26,7 +26,7 @@ Working guidelines for AI agents editing this repository. These rules are mandat
 ## 3. Pull Requests
 
 - Open a PR against `main` for every branch, filling `.github/PULL_REQUEST_TEMPLATE.md` (Resumo, Issue relacionada, Como testar, Checklist, Impacto) — in English.
-- Every PR should preferably link the related GHP issue from Linear in the `Issue relacionada` section and reference it in commits (`Refs: GHP-…`). If no issue exists yet, create one in Linear GHP before opening the PR.
+- Every PR should preferably link the related GHP issue from Linear in the `Issue relacionada` section and reference it in commits (`Refs: GHP-…`). Linking is conditional on the issue already existing: creating and organizing issues is up to the project developers.
 - Keep PRs small and focused. No unrelated refactors, renames or reformatting of untouched code (avoids diff noise).
 - Flag breaking changes explicitly (Impacto section) and link the related issue.
 - Never push directly to `main` and never bypass the CI gate.
