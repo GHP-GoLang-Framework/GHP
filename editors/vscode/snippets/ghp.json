@@ -1,49 +1,49 @@
 {
-  "Import de pacotes Go": {
+  "Go package imports": {
     "prefix": "go:import",
     "body": ["<go:import (\"${1:fmt}\")/>"],
-    "description": "Declara um ou mais imports Go usados na página"
+    "description": "Declares one or more Go imports used on the page"
   },
-  "Bloco de código Go": {
+  "Go code block": {
     "prefix": "go",
-    "body": ["<go", "\t${1:// código Go}", "/>"],
-    "description": "Bloco de código Go (statement), pode ocupar várias linhas"
+    "body": ["<go", "\t${1:// Go code}", "/>"],
+    "description": "Block of Go code (statement), can span multiple lines"
   },
-  "Renderizar expressão": {
+  "Render expression": {
     "prefix": "go=",
-    "body": ["<go= ${1:expressao} />"],
-    "description": "Renderiza o valor de uma expressão Go no HTML (com escaping automático)"
+    "body": ["<go= ${1:expression} />"],
+    "description": "Renders the value of a Go expression into the HTML (with automatic escaping)"
   },
-  "Condicional if": {
+  "Conditional if": {
     "prefix": "go:if",
-    "body": ["<go:if ${1:condicao}/>", "\t$0", "<go:endif/>"],
-    "description": "Condicional — renderiza o corpo se a condição for verdadeira"
+    "body": ["<go:if ${1:condition}/>", "\t$0", "<go:endif/>"],
+    "description": "Conditional — renders the body if the condition is true"
   },
-  "Condicional if/else": {
+  "Conditional if/else": {
     "prefix": "go:ifelse",
-    "body": ["<go:if ${1:condicao}/>", "\t$0", "<go:else/>", "\t", "<go:endif/>"],
-    "description": "Condicional com ramo alternativo"
+    "body": ["<go:if ${1:condition}/>", "\t$0", "<go:else/>", "\t", "<go:endif/>"],
+    "description": "Conditional with an alternative branch"
   },
-  "Laço for": {
+  "For loop": {
     "prefix": "go:for",
     "body": ["<go:for ${1:_, item := range items}/>", "\t$0", "<go:endfor/>"],
-    "description": "Laço — repete o corpo uma vez por iteração"
+    "description": "Loop — repeats the body once per iteration"
   },
   "Switch": {
     "prefix": "go:switch",
     "body": [
-      "<go:switch ${1:variavel}/>",
-      "\t<go:case ${2:valor}/>",
+      "<go:switch ${1:variable}/>",
+      "\t<go:case ${2:value}/>",
       "\t\t$0",
       "\t<go:default/>",
       "\t\t",
       "<go:endswitch/>"
     ],
-    "description": "Switch com um case e default"
+    "description": "Switch with a case and a default"
   },
-  "Case do switch": {
+  "Switch case": {
     "prefix": "go:case",
-    "body": ["<go:case ${1:valor}/>", "\t$0"],
-    "description": "Ramo de um <go:switch>"
+    "body": ["<go:case ${1:value}/>", "\t$0"],
+    "description": "A branch of a <go:switch>"
   }
 }
