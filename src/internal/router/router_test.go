@@ -152,30 +152,29 @@ func TestScanDetectsFuncNameConflict(t *testing.T) {
 	}
 }
 
-func TestScanDetectsGoFileConflict(t *testing.T) {
+func TestScanDetectsUnderscoreSlashFuncNameConflict(t *testing.T) {
 	// blog_post.ghp (root) and blog/post.ghp (subfolder) derive
 	// different routes (/blog_post and /blog/post, no conflict there),
-	// but deriveGoFile flattens both to the same "blog_post.go" -
-	// without also checking GoFile, one of the two generated files
-	// would silently overwrite the other. This same pair also collides
-	// on FuncName (both derivations treat "_" as a word boundary the
-	// same way, so a "_" inside one segment is indistinguishable from a
-	// slash separating two segments) - Scan reports the first conflict
-	// it finds, which here is the function name. The point of this test
-	// is not which specific field gets cited, but that the pair is
-	// detected as a conflict - before this check, neither of them
-	// triggered any error.
+	// but both derive the same FuncName "BlogPost", because a "_" inside
+	// one segment is indistinguishable from a "/" separating two
+	// segments. They also derive the same GoFile ("blog_post.go"), yet
+	// Scan only needs the FuncName check to reject the pair: GoFile is a
+	// function of the same joined segments that define FuncName, so any
+	// GoFile collision is necessarily a FuncName collision too.
 	dir := t.TempDir()
 	writePages(t, dir, "blog_post.ghp", "blog/post.ghp")
 
 	_, err := Scan(dir)
 	if err == nil {
-		t.Fatal("Scan() = nil error, want conflict (func name or go file)")
+		t.Fatal("Scan() = nil error, want func name conflict")
 	}
 
 	var conflict *ConflictError
 	if !errors.As(err, &conflict) {
 		t.Fatalf("error = %T, want *ConflictError", err)
+	}
+	if conflict.Value != "BlogPost" {
+		t.Errorf("Value = %q, want %q", conflict.Value, "BlogPost")
 	}
 }
 

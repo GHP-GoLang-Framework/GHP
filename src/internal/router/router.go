@@ -18,11 +18,9 @@ type Page struct {
 }
 
 // ConflictError reports that two different .ghp files derived the same
-// value for one of Route, FuncName or GoFile - any of the three
-// colliding breaks the site (a duplicate route shadows a page, a
-// duplicate func name fails to compile, a duplicate filename overwrites
-// a sibling's generated source), so Scan checks all three, not just
-// Route.
+// value for one of Route or FuncName - either collision breaks the site
+// (a duplicate route shadows a page, a duplicate func name fails to
+// compile), so Scan checks both, not just Route.
 type ConflictError struct {
 	What          string // full, grammatically correct phrase, e.g. "the same route"
 	Value         string
@@ -40,14 +38,19 @@ func (e *ConflictError) Error() string {
 // lives, and never falls back to a default of its own.
 //
 // It returns a *ConflictError if two different files derive the same
-// Route, FuncName or GoFile, and a plain error if a derived FuncName
+// Route or FuncName, and a plain error if a derived FuncName
 // isn't a valid Go identifier (e.g. a page named "2024.ghp" on its own,
 // with no other path segment to give it a leading letter).
+//
+// A derived GoFile is deliberately not checked for collisions: GoFile is
+// a function of the same joined segments that define FuncName (the '_'
+// used as filename separator is a FuncName word boundary too), so any
+// two files that share a GoFile already share a FuncName and are caught
+// by the check above.
 func Scan(dir string) ([]Page, error) {
 	var pages []Page
 	byRoute := make(map[string]string)
 	byFuncName := make(map[string]string)
-	byGoFile := make(map[string]string)
 
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -89,12 +92,8 @@ func Scan(dir string) ([]Page, error) {
 		if other, ok := byFuncName[page.FuncName]; ok {
 			return &ConflictError{What: "the same function name", Value: page.FuncName, First: other, Second: page.GhpPath}
 		}
-		if other, ok := byGoFile[page.GoFile]; ok {
-			return &ConflictError{What: "the same .go file", Value: page.GoFile, First: other, Second: page.GhpPath}
-		}
 		byRoute[page.Route] = page.GhpPath
 		byFuncName[page.FuncName] = page.GhpPath
-		byGoFile[page.GoFile] = page.GhpPath
 
 		pages = append(pages, page)
 		return nil
