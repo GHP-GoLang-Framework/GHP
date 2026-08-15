@@ -34,7 +34,7 @@ jobs:
         run: |
           unformatted=$(gofmt -l .)
           if [ -n "$unformatted" ]; then
-            echo "::error::Arquivos não formatados com gofmt:"
+            echo "::error::Files not formatted with gofmt:"
             echo "$unformatted"
             exit 1
           fi
@@ -42,12 +42,12 @@ jobs:
       - name: go vet
         run: go vet ./src/...
 
-      # TEMPORÁRIO: golangci-lint "latest" (resolvido pela action) ainda é
-      # buildado com go1.24, que recusa lintar um módulo com `go 1.26.5` no
-      # go.mod ("the Go language version used to build golangci-lint is
-      # lower than the targeted Go version"). Reativar assim que uma release
-      # buildada com go1.26+ existir, ou migrar o .golangci.yml pro schema
-      # v2 e pinar essa versão explicitamente.
+      # TEMPORARY: golangci-lint "latest" (resolved by the action) is still
+      # built with go1.24, which refuses to lint a module with `go 1.26.5` in
+      # the go.mod ("the Go language version used to build golangci-lint is
+      # lower than the targeted Go version"). Re-enable once a release built
+      # with go1.26+ exists, or migrate .golangci.yml to the v2 schema and pin
+      # that version explicitly.
       # - name: golangci-lint
       #   uses: golangci/golangci-lint-action@v6
       #   with:
@@ -127,9 +127,9 @@ jobs:
       - name: Enforce minimum coverage
         run: |
           COVERAGE=$(go tool cover -func=coverage.out | grep total: | awk '{print substr($3, 1, length($3)-1)}')
-          echo "Cobertura total: ${COVERAGE}%"
+          echo "Total coverage: ${COVERAGE}%"
           awk -v cov="$COVERAGE" -v min="${{ env.COVERAGE_MIN }}" 'BEGIN { exit (cov+0 < min) }' || {
-            echo "::error::Cobertura ${COVERAGE}% abaixo do mínimo de ${{ env.COVERAGE_MIN }}%"
+            echo "::error::Coverage ${COVERAGE}% below the minimum of ${{ env.COVERAGE_MIN }}%"
             exit 1
           }
 
@@ -236,7 +236,7 @@ jobs:
       - name: Fail if any required job failed or was cancelled
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
         run: |
-          echo "Um ou mais jobs obrigatórios do CI não passaram:"
+          echo "One or more required CI jobs did not pass:"
           echo '${{ toJSON(needs) }}'
           exit 1
 
