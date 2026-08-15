@@ -5,15 +5,15 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/GHP-GoLang-Framework/GHP)](go.mod)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Templates estilo PHP, com Go de verdade por baixo.
+PHP-style templates, backed by real Go.
 
-O GHP compila arquivos `.ghp` — HTML com Go real embutido — direto em handlers `net/http`, sem motor de template em runtime. O que está entre as tags é Go de verdade: compila com `go build`, os erros apontam pra linha certa do `.ghp`, e qualquer pacote (padrão, externo ou do seu próprio módulo) pode ser importado.
+GHP compiles `.ghp` files — HTML with real embedded Go — straight into `net/http` handlers, with no runtime template engine. Everything between the tags is real Go: it compiles with `go build`, errors point to the right line of the `.ghp`, and any package (standard, external, or from your own module) can be imported.
 
-## Status: em reescrita ativa
+## Status: active rewrite
 
-O GHP está sendo reescrito do zero com uma sintaxe nova, focada em DX. Hoje o repositório tem só o esqueleto: CLI ainda é um stub (`ghp dev`/`ghp build` não fazem nada de real ainda) e o parser/codegen da sintaxe abaixo ainda não existe. A sintaxe já está definida — ver [`docs/template.ghp`](docs/template.ghp) — e a implementação está em andamento.
+GHP is being rewritten from scratch with a new syntax focused on DX. Today the repository only has the skeleton: the CLI is still a stub (`ghp dev`/`ghp build` do nothing real yet) and the parser/codegen for the syntax below does not exist yet. The syntax is already defined — see [`docs/template.ghp`](docs/template.ghp) — and the implementation is in progress.
 
-## A sintaxe (alvo)
+## The syntax (target)
 
 ```html
 <go:import ("fmt")/>
@@ -23,9 +23,9 @@ O GHP está sendo reescrito do zero com uma sintaxe nova, focada em DX. Hoje o r
 />
 
 <!doctype html>
-<html lang="pt-br">
+<html lang="en">
 <head>
-  <title><go= fmt.Sprintf("Cardápio (%d itens)", len(items)) /></title>
+  <title><go= fmt.Sprintf("Menu (%d items)", len(items)) /></title>
 </head>
 <body>
   <ul>
@@ -35,30 +35,30 @@ O GHP está sendo reescrito do zero com uma sintaxe nova, focada em DX. Hoje o r
   </ul>
 
   <go:if len(items) == 0/>
-    <p>Nada no cardápio ainda.</p>
+    <p>Nothing on the menu yet.</p>
   <go:else/>
-    <p>Bom apetite!</p>
+    <p>Enjoy your meal!</p>
   <go:endif/>
 </body>
 </html>
 ```
 
-Toda tag GHP é self-closing (termina com `/>`). Blocos com corpo — `<go:if>`, `<go:switch>`, `<go:for>` — são fechados pelas tags `<go:endif/>`, `<go:endswitch/>` e `<go:endfor/>`.
+Every GHP tag is self-closing (ends with `/>`). Blocks with a body — `<go:if>`, `<go:switch>`, `<go:for>` — are closed by the `<go:endif/>`, `<go:endswitch/>`, and `<go:endfor/>` tags.
 
-| Tag | O que faz |
+| Tag | What it does |
 | --- | --- |
-| `<go:import (...)/>` | Importa um ou mais pacotes — padrão, externos ou do seu módulo. |
-| `<go .../>` | Bloco de código Go (statement) — pode abrir escopo entre trechos de HTML. |
-| `<go= expressão/>` | Renderiza o valor de uma expressão no HTML, com escaping automático. |
-| `<go:if/>` / `<go:else/>` / `<go:endif/>` | Condicional, com os operadores nativos do Go. |
+| `<go:import (...)/>` | Imports one or more packages — standard, external, or from your module. |
+| `<go .../>` | Block of Go code (statement) — can open a scope between HTML chunks. |
+| `<go= expression/>` | Renders an expression's value into the HTML, with automatic escaping. |
+| `<go:if/>` / `<go:else/>` / `<go:endif/>` | Conditional, using Go's native operators. |
 | `<go:switch/>` / `<go:case/>` / `<go:default/>` / `<go:endswitch/>` | Switch. |
-| `<go:for/>` / `<go:endfor/>` | Laço — qualquer forma de `for`/`range` válida em Go. |
+| `<go:for/>` / `<go:endfor/>` | Loop — any form of `for`/`range` valid in Go. |
 
-Roteamento é por arquivo: `pages/index.ghp` vira `/`, `pages/blog/[slug].ghp` vira `/blog/{slug}`.
+Routing is per file: `pages/index.ghp` becomes `/`, `pages/blog/[slug].ghp` becomes `/blog/{slug}`.
 
-## Instalação
+## Installation
 
-Ainda não há binário publicado nem `go install` disponível — isso faz parte do trabalho em andamento. Por enquanto, buildar a partir do código-fonte:
+There is no published binary or `go install` yet — that is part of the work in progress. For now, build from source:
 
 ```bash
 git clone https://github.com/GHP-GoLang-Framework/GHP.git
@@ -66,35 +66,35 @@ cd GHP
 go build -o bin/ghp ./src/cmd/ghp
 ```
 
-Também há uma imagem Docker publicada a cada merge na `main`: `edge` é o build contínuo (a ponta do desenvolvimento), e uma tag CalVer versionada (`YYYY.MM.DD[.N]`) + `latest` são criadas automaticamente em seguida — todo merge verde já é uma release.
+A Docker image is also published on every merge to `main`: `edge` is the continuous build (the tip of development), and a versioned CalVer tag (`YYYY.MM.DD[.N]`) + `latest` are created automatically right after — every green merge is already a release.
 
 ```bash
 docker pull ghcr.io/ghp-golang-framework/ghp:latest
 docker run --rm ghcr.io/ghp-golang-framework/ghp:latest help
 ```
 
-## Desenvolvendo o GHP
+## Developing GHP
 
 ```bash
 git clone https://github.com/GHP-GoLang-Framework/GHP.git
 cd GHP
-npm install     # configura os git hooks (Husky + commitlint)
-gofmt -l ./src  # sem saída = formatado
+npm install     # sets up the git hooks (Husky + commitlint)
+gofmt -l ./src  # no output = formatted
 go vet ./src/...
-go test -short ./src/... -race     # unit (pula integration/e2e)
-go test ./src/... -race            # tudo, incluindo integration/e2e
-go build -o bin/ghp ./src/cmd/ghp  # builda o binário
+go test -short ./src/... -race     # unit (skips integration/e2e)
+go test ./src/... -race            # everything, including integration/e2e
+go build -o bin/ghp ./src/cmd/ghp  # builds the binary
 ```
 
-Cobertura (mínimo exigido: 90%): `go test ./src/... -coverprofile=coverage.out -covermode=atomic -coverpkg=./src/...` e depois `go tool cover -func=coverage.out`. Detalhes em [`docs/testing.md`](docs/testing.md).
+Coverage (minimum required: 90%): `go test ./src/... -coverprofile=coverage.out -covermode=atomic -coverpkg=./src/...` and then `go tool cover -func=coverage.out`. Details in [`docs/testing.md`](docs/testing.md).
 
-## Documentação
+## Documentation
 
-- [`docs/template.ghp`](docs/template.ghp) — referência completa da sintaxe.
-- [`docs/testing.md`](docs/testing.md) — como os testes (unit/integration/e2e) são organizados e rodados.
-- [`docs/git-workflow.md`](docs/git-workflow.md) — fluxo de branch, commit e Pull Request.
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — como contribuir.
+- [`docs/template.ghp`](docs/template.ghp) — full syntax reference.
+- [`docs/testing.md`](docs/testing.md) — how the tests (unit/integration/e2e) are organized and run.
+- [`docs/git-workflow.md`](docs/git-workflow.md) — branch, commit, and Pull Request flow.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute.
 
-## Licença
+## License
 
 [MIT](LICENSE).
