@@ -11,7 +11,7 @@ import (
 func TestGenerateForRangeSlice(t *testing.T) {
 	nodes := []ast.Node{
 		ast.NewFor("_, item := range items",
-			[]ast.Node{ast.NewEcho("item.Nome", 2)}, 1),
+			[]ast.Node{ast.NewEcho("item.Name", 2)}, 1),
 	}
 
 	got, err := Generate("p.ghp", nodes)
@@ -22,7 +22,7 @@ func TestGenerateForRangeSlice(t *testing.T) {
 	want := "//line p.ghp:1\n" +
 		"for _, item := range items {\n" +
 		"//line p.ghp:2\n" +
-		"io.WriteString(w, html.EscapeString(fmt.Sprint(item.Nome)))\n" +
+		"io.WriteString(w, html.EscapeString(fmt.Sprint(item.Name)))\n" +
 		"}\n"
 	if got != want {
 		t.Errorf("Generate() = %q, want %q", got, want)
@@ -31,8 +31,8 @@ func TestGenerateForRangeSlice(t *testing.T) {
 
 func TestGenerateForRangeMap(t *testing.T) {
 	nodes := []ast.Node{
-		ast.NewFor("chave, valor := range mapa",
-			[]ast.Node{ast.NewEcho("chave", 2), ast.NewEcho("valor", 2)}, 1),
+		ast.NewFor("key, value := range m",
+			[]ast.Node{ast.NewEcho("key", 2), ast.NewEcho("value", 2)}, 1),
 	}
 
 	got, err := Generate("p.ghp", nodes)
@@ -41,11 +41,11 @@ func TestGenerateForRangeMap(t *testing.T) {
 	}
 
 	want := "//line p.ghp:1\n" +
-		"for chave, valor := range mapa {\n" +
+		"for key, value := range m {\n" +
 		"//line p.ghp:2\n" +
-		"io.WriteString(w, html.EscapeString(fmt.Sprint(chave)))\n" +
+		"io.WriteString(w, html.EscapeString(fmt.Sprint(key)))\n" +
 		"//line p.ghp:2\n" +
-		"io.WriteString(w, html.EscapeString(fmt.Sprint(valor)))\n" +
+		"io.WriteString(w, html.EscapeString(fmt.Sprint(value)))\n" +
 		"}\n"
 	if got != want {
 		t.Errorf("Generate() = %q, want %q", got, want)
@@ -71,11 +71,11 @@ func TestGenerateForTraditionalIndex(t *testing.T) {
 }
 
 func TestGenerateNestedForProducesValidGo(t *testing.T) {
-	// Prova de ponta a ponta: go:for dentro de go:for (o mesmo cenario
-	// que o parser cobre em TestParseNesting) compilado de verdade com
-	// go/parser, nao so comparado como string.
-	inner := ast.NewFor("_, cel := range linha", []ast.Node{ast.NewEcho("cel", 2)}, 2)
-	outer := ast.NewFor("_, linha := range matriz", []ast.Node{inner}, 1)
+	// End-to-end proof: go:for inside go:for (the same scenario the
+	// parser covers in TestParseNesting) compiled for real with
+	// go/parser, not just compared as a string.
+	inner := ast.NewFor("_, cell := range row", []ast.Node{ast.NewEcho("cell", 2)}, 2)
+	outer := ast.NewFor("_, row := range matrix", []ast.Node{inner}, 1)
 
 	body, err := Generate("p.ghp", []ast.Node{outer})
 	if err != nil {
@@ -84,10 +84,10 @@ func TestGenerateNestedForProducesValidGo(t *testing.T) {
 
 	src := "package p\n\n" +
 		"import (\n\t\"fmt\"\n\t\"html\"\n\t\"io\"\n)\n\n" +
-		"func f(w io.Writer, matriz [][]string) {\n" + body + "}\n"
+		"func f(w io.Writer, matrix [][]string) {\n" + body + "}\n"
 
 	fset := token.NewFileSet()
-	if _, err := parser.ParseFile(fset, "gerado.go", src, 0); err != nil {
-		t.Fatalf("codigo gerado nao e Go valido: %v\n---\n%s", err, src)
+	if _, err := parser.ParseFile(fset, "generated.go", src, 0); err != nil {
+		t.Fatalf("generated code is not valid Go: %v\n---\n%s", err, src)
 	}
 }
