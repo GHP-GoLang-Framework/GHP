@@ -27,7 +27,7 @@ updates:
       prefix: "chore"
       include: "scope"
 
-  # Extensão VSCode — package.json próprio, não coberto pelo npm da raiz.
+  # VSCode extension — own package.json, not covered by the root npm.
   - package-ecosystem: "npm"
     directory: "/editors/vscode"
     schedule:
