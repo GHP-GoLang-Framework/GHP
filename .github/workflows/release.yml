@@ -1,11 +1,11 @@
 name: Release
 
-# Cobre tags CalVer (YYYY.MM.DD[.N]) empurradas manualmente por um humano —
-# ex.: re-taguear um commit antigo, hotfix pontual fora do fluxo normal.
-# Tags criadas pelo cd.yml usam GITHUB_TOKEN, que não dispara outros
-# workflows, então o cd.yml já cria a própria release nesse caminho; este
-# workflow só evita que uma tag manual fique sem imagem versionada e sem
-# release.
+# Covers CalVer tags (YYYY.MM.DD[.N]) pushed manually by a human —
+# e.g.: re-tagging an old commit, a one-off hotfix outside the normal flow.
+# Tags created by cd.yml use GITHUB_TOKEN, which does not trigger other
+# workflows, so cd.yml already creates its own release on that path; this
+# workflow only prevents a manual tag from ending up without a versioned image
+# and without a release.
 on:
   push:
     tags:
@@ -117,13 +117,13 @@ jobs:
           done
           (cd dist && sha256sum * > checksums.txt)
 
-      - name: Create ou atualizar GitHub Release
+      - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG já existe — atualizando os assets de binário."
+            echo "Release $TAG already exists — updating the binary assets."
             gh release upload "$TAG" dist/* --clobber
             exit 0
           fi
