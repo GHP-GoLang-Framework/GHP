@@ -12,10 +12,10 @@ func TestGenerateSwitchWithDefault(t *testing.T) {
 	nodes := []ast.Node{
 		ast.NewSwitch("v",
 			[]ast.Case{
-				{Value: "1", Body: []ast.Node{ast.NewText("um", 2)}, Line: 2},
-				{Value: "2", Body: []ast.Node{ast.NewText("dois", 3)}, Line: 3},
+				{Value: "1", Body: []ast.Node{ast.NewText("one", 2)}, Line: 2},
+				{Value: "2", Body: []ast.Node{ast.NewText("two", 3)}, Line: 3},
 			},
-			[]ast.Node{ast.NewText("outro", 4)},
+			[]ast.Node{ast.NewText("other", 4)},
 			1),
 	}
 
@@ -29,14 +29,14 @@ func TestGenerateSwitchWithDefault(t *testing.T) {
 		"//line p.ghp:2\n" +
 		"case 1:\n" +
 		"//line p.ghp:2\n" +
-		"io.WriteString(w, \"um\")\n" +
+		"io.WriteString(w, \"one\")\n" +
 		"//line p.ghp:3\n" +
 		"case 2:\n" +
 		"//line p.ghp:3\n" +
-		"io.WriteString(w, \"dois\")\n" +
+		"io.WriteString(w, \"two\")\n" +
 		"default:\n" +
 		"//line p.ghp:4\n" +
-		"io.WriteString(w, \"outro\")\n" +
+		"io.WriteString(w, \"other\")\n" +
 		"}\n"
 	if got != want {
 		t.Errorf("Generate() = %q, want %q", got, want)
@@ -67,9 +67,9 @@ func TestGenerateSwitchWithoutDefault(t *testing.T) {
 }
 
 func TestGenerateSwitchMultiValueCase(t *testing.T) {
-	// Decisao do GHP-9: case aceita varios valores separados por
-	// virgula, igual ao switch do Go - o Value ja vem pronto do parser
-	// (ver parse_test.go), genSwitch so precisa colocar depois de
+	// GHP-9 decision: a case accepts several comma-separated values,
+	// just like Go's switch - Value already comes ready from the
+	// parser (see parse_test.go), genSwitch only has to place it after
 	// "case ".
 	nodes := []ast.Node{
 		ast.NewSwitch("v", []ast.Case{{Value: `"a", "b"`, Body: nil, Line: 1}}, nil, 1),
@@ -91,13 +91,13 @@ func TestGenerateSwitchMultiValueCase(t *testing.T) {
 }
 
 func TestGenerateSwitchProducesValidGo(t *testing.T) {
-	// Prova de ponta a ponta, mesmo espirito do teste equivalente pro
-	// go:if: o Go gerado e compilado de verdade com go/parser, nao so
-	// comparado como string.
+	// End-to-end proof, in the same spirit as the equivalent test for
+	// go:if: the generated Go is really compiled with go/parser, not
+	// just compared as a string.
 	nodes := []ast.Node{
 		ast.NewSwitch("v",
 			[]ast.Case{
-				{Value: `"a", "b"`, Body: []ast.Node{ast.NewText("um", 2)}, Line: 2},
+				{Value: `"a", "b"`, Body: []ast.Node{ast.NewText("one", 2)}, Line: 2},
 			},
 			[]ast.Node{ast.NewEcho("v", 3)},
 			1),
@@ -113,7 +113,7 @@ func TestGenerateSwitchProducesValidGo(t *testing.T) {
 		"func f(w io.Writer, v string) {\n" + body + "}\n"
 
 	fset := token.NewFileSet()
-	if _, err := parser.ParseFile(fset, "gerado.go", src, 0); err != nil {
-		t.Fatalf("codigo gerado nao e Go valido: %v\n---\n%s", err, src)
+	if _, err := parser.ParseFile(fset, "generated.go", src, 0); err != nil {
+		t.Fatalf("generated code is not valid Go: %v\n---\n%s", err, src)
 	}
 }
