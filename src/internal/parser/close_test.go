@@ -9,24 +9,24 @@ func TestFindTagClose(t *testing.T) {
 		want int
 	}{
 		{
-			// Aspas com escape: o '"' escapado (\") nao pode ser lido
-			// como o fim da string, senao o '>' logo depois dele
-			// fecharia a tag cedo demais.
-			name: "aspas com escape",
+			// Escaped quotes: the escaped '"' (\") must not be read as
+			// the end of the string, or the '>' right after it would
+			// close the tag too early.
+			name: "escaped quotes",
 			src:  ` x == "a\"b" >resto`,
-			want: len(` x == "a\"b" `), // ate o '>' logo apos a aspa de fechamento real
+			want: len(` x == "a\"b" `), // up to the '>' right after the real closing quote
 		},
 		{
-			name: "parenteses protegem o > interno",
+			name: "parentheses protect the inner >",
 			src:  ` (a > b) >resto`,
 			want: len(` (a > b) `),
 		},
 		{
-			// Ao contrario de '(' e '[', '{' nao pausa o fechamento -
-			// um <go ...> pode abrir uma chave que so fecha numa tag
-			// posterior (ver comentario em findTagClose), entao o '>'
-			// logo depois dela tem que fechar a tag normalmente.
-			name: "chave nao protege o > interno",
+			// Unlike '(' and '[', '{' does not pause closing - a
+			// <go ...> may open a brace that only closes in a later tag
+			// (see the comment in findTagClose), so the '>' right
+			// after it must close the tag normally.
+			name: "brace does not protect the inner >",
 			src:  ` if x {>resto`,
 			want: len(` if x {`),
 		},
