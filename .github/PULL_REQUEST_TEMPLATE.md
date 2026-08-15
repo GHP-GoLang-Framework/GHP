@@ -1,28 +1,28 @@
-## Resumo
+## Summary
 
-<!-- O que mudou e por quê, em 1-3 bullets -->
+<!-- What changed and why, in 1-3 bullets -->
 
 -
 
-## Issue relacionada
+## Related issue
 
-<!-- Referencie a issue do Linear, se houver -->
+<!-- Reference the Linear issue, if any -->
 Refs: GHP-
 
-## Como testar
+## How to test
 
-<!-- Passos pra quem for revisar reproduzir/validar a mudança -->
+<!-- Steps for the reviewer to reproduce/validate the change -->
 
 - [ ]
 
 ## Checklist
 
-- [ ] `gofmt -l ./src` sem saída e `go vet ./src/...` limpos; `go test -short ./src/... -race` e `go test ./src/test/integration/... -race` passam localmente
-- [ ] Testes cobrindo o caso novo (o CI exige cobertura mínima de 90%)
-- [ ] Título do PR segue [Conventional Commits](https://www.conventionalcommits.org/pt-br/) (`tipo(escopo): descrição`)
-- [ ] Documentação atualizada, se necessário (`docs/`, `README.md`)
+- [ ] `gofmt -l ./src` no output and `go vet ./src/...` clean; `go test -short ./src/... -race` and `go test ./src/test/integration/... -race` pass locally
+- [ ] Tests covering the new case (CI requires minimum 90% coverage)
+- [ ] PR title follows [Conventional Commits](https://www.conventionalcommits.org/en/) (`type(scope): description`)
+- [ ] Documentation updated if necessary (`docs/`, `README.md`)
 
-## Impacto
+## Impact
 
-- Breaking change (sintaxe `.ghp` ou API do `runtime`)? sim/não
-- Precisa de ação manual depois do merge (migração, nova config, secret)? sim/não
+- Breaking change (`.ghp` syntax or `runtime` API)? yes/no
+- Manual action needed after merge (migration, new config, secret)? yes/no
