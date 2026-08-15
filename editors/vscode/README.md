@@ -1,45 +1,45 @@
-# GHP — extensão VSCode
+# GHP — VSCode extension
 
-Realce de sintaxe para arquivos `.ghp`: HTML com Go real embutido.
+Syntax highlighting for `.ghp` files: HTML with real embedded Go.
 
-## O que faz
+## What it does
 
-- **Realce de sintaxe** — HTML normal + as tags `<go .../>`, com o Go dentro delas colorido como Go de verdade
-- **Auto-fechamento** — digitar `<go:` ou `<go=` insere o `/>` automaticamente
-- **Snippets** — `go:if`, `go:for`, `go:switch`, `go:import` e outros expandem o bloco completo, já com a tag de fechamento (`<go:endif/>`, `<go:endfor/>`, `<go:endswitch/>`)
-- **Indentação automática** dentro de `<go:if>`, `<go:for>` e `<go:switch>`
+- **Syntax highlighting** — plain HTML + the `<go .../>` tags, with the Go inside them colored as real Go
+- **Auto-closing** — typing `<go:` or `<go=` inserts the `/>` automatically
+- **Snippets** — `go:if`, `go:for`, `go:switch`, `go:import`, and others expand the full block, already with the closing tag (`<go:endif/>`, `<go:endfor/>`, `<go:endswitch/>`)
+- **Automatic indentation** inside `<go:if>`, `<go:for>`, and `<go:switch>`
 
-## Tags reconhecidas
+## Recognized tags
 
-Toda tag GHP é self-closing (termina com `/>`).
+Every GHP tag is self-closing (ends with `/>`).
 
-| Tag | O que é |
+| Tag | What it is |
 | --- | --- |
-| `<go:import ("fmt")/>` | Imports Go da página |
-| `<go .../>` | Bloco de código Go (statement), pode ser multi-linha |
-| `<go= expressao/>` | Renderiza o valor da expressão no HTML |
-| `<go:if cond/>` / `<go:else/>` / `<go:endif/>` | Condicional |
+| `<go:import ("fmt")/>` | Page-level Go imports |
+| `<go .../>` | Block of Go code (statement), can be multi-line |
+| `<go= expression/>` | Renders the expression's value into the HTML |
+| `<go:if cond/>` / `<go:else/>` / `<go:endif/>` | Conditional |
 | `<go:switch v/>` / `<go:case x/>` / `<go:default/>` / `<go:endswitch/>` | Switch |
-| `<go:for expr/>` / `<go:endfor/>` | Laço |
+| `<go:for expr/>` / `<go:endfor/>` | Loop |
 
-A referência da sintaxe é [`docs/template.ghp`](../../docs/template.ghp) na raiz do repositório.
+The syntax reference is [`docs/template.ghp`](../../docs/template.ghp) at the repository root.
 
-## Desenvolvimento
+## Development
 
 ```bash
 cd editors/vscode
 npm install
-npm test        # roda a gramática contra casos reais e valida os escopos
+npm test        # runs the grammar against real cases and validates the scopes
 ```
 
-Para testar no editor: abra a pasta `editors/vscode` no VSCode e pressione `F5` — abre uma janela com a extensão carregada. Abra qualquer `.ghp` (ex.: `docs/template.ghp`) para ver o realce.
+To test in the editor: open the `editors/vscode` folder in VSCode and press `F5` — opens a window with the extension loaded. Open any `.ghp` (e.g.: `docs/template.ghp`) to see the highlighting.
 
-Para empacotar: `npx @vscode/vsce package`.
+To package: `npx @vscode/vsce package`.
 
-## Limitações conhecidas
+## Known limitations
 
-**Operador `>` dentro de tags.** A tag fecha no primeiro `>`, então uma condição como `<go:if a > b/>` é realçada incorretamente (o realce termina no `>` do operador). Isso não é um bug da extensão e sim uma ambiguidade da própria sintaxe, que precisa ser resolvida no parser — enquanto isso, `>=` e `>` em condições podem ser escritos como `<go:if b < a/>` ou movidos para um bloco `<go .../>` anterior.
+**`>` operator inside tags.** The tag closes on the first `>`, so a condition like `<go:if a > b/>` is highlighted incorrectly (the highlight ends at the operator's `>`). This is not an extension bug but an ambiguity of the syntax itself, which needs to be resolved in the parser — in the meantime, `>=` and `>` in conditions can be written as `<go:if b < a/>` or moved into a previous `<go .../>` block.
 
-**Dependência da gramática Go.** O realce do conteúdo das tags depende da gramática `source.go`, que vem embutida no VSCode. Se por algum motivo ela não estiver disponível, as tags GHP deixam de ser reconhecidas por completo (o TextMate descarta a regra inteira quando um `include` não resolve — não há degradação parcial).
+**Dependency on the Go grammar.** Highlighting the tag content depends on the `source.go` grammar, which ships with VSCode. If for any reason it is unavailable, the GHP tags stop being recognized altogether (TextMate drops the whole rule when an `include` does not resolve — there is no partial degradation).
 
-**Sem LSP.** Não há autocomplete de símbolos Go, "ir para definição" nem diagnósticos dentro das tags. Isso exigiria um servidor de linguagem que entenda o mapeamento `.ghp` → Go gerado — um próximo passo natural depois que o parser e o codegen existirem.
+**No LSP.** There is no Go symbol autocomplete, "go to definition", or diagnostics inside the tags. That would require a language server that understands the `.ghp` → generated Go mapping — a natural next step once the parser and codegen exist.
