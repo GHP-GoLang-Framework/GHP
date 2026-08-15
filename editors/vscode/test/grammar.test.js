@@ -1,17 +1,18 @@
-// Teste da gramática TextMate do GHP.
+// Test for the GHP TextMate grammar.
 //
-// Carrega ghp.tmLanguage.json no mesmo motor que o VSCode usa (vscode-textmate
-// + oniguruma) e verifica os escopos atribuídos a cada trecho. Sem isso, a
-// única forma de validar a gramática seria abrir o editor e olhar as cores.
+// Loads ghp.tmLanguage.json in the same engine VSCode uses (vscode-textmate
+// + oniguruma) and checks the scopes assigned to each chunk. Without this,
+// the only way to validate the grammar would be opening the editor and
+// looking at the colors.
 //
-// `source.go` e `text.html.basic` são gramáticas built-in do VSCode, não
-// empacotadas nesta extensão. Aqui elas são registradas como stubs vazios —
-// isso NÃO é cosmético: se um `include` não resolve, o vscode-textmate
-// descarta a regra inteira que o contém (a tag deixa de ser reconhecida por
-// completo, sem degradação). Os stubs reproduzem o ambiente real, onde os
-// dois escopos existem, e mantêm o teste focado no que é nosso: o
-// reconhecimento das tags GHP e a marcação das regiões
-// `meta.embedded.block.go` que fazem o VSCode injetar o Go de verdade.
+// `source.go` and `text.html.basic` are VSCode built-in grammars, not
+// packaged in this extension. Here they are registered as empty stubs —
+// this is NOT cosmetic: if an `include` does not resolve, vscode-textmate
+// drops the whole rule containing it (the tag stops being recognized
+// entirely, with no degradation). The stubs reproduce the real environment,
+// where both scopes exist, and keep the test focused on what is ours: the
+// recognition of GHP tags and the marking of the
+// `meta.embedded.block.go` regions that make VSCode inject real Go.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -42,7 +43,7 @@ async function loadGrammar() {
         const raw = fs.readFileSync(GRAMMAR_PATH, 'utf8');
         return textmate.parseRawGrammar(raw, GRAMMAR_PATH);
       }
-      // Stubs das gramáticas built-in do VSCode — ver comentário no topo.
+      // Stubs for the VSCode built-in grammars — see comment at the top.
       if (scopeName === 'source.go' || scopeName === 'text.html.basic') {
         return { scopeName, patterns: [] };
       }
@@ -51,12 +52,12 @@ async function loadGrammar() {
   });
 
   const grammar = await registry.loadGrammar('source.ghp');
-  assert.ok(grammar, 'gramática source.ghp não carregou');
+  assert.ok(grammar, 'source.ghp grammar did not load');
   return grammar;
 }
 
-// tokenize roda a gramática sobre `source` e devolve [{text, scopes}], com o
-// estado de linha encadeado — necessário para tags multi-linha como <go .../>.
+// tokenize runs the grammar over `source` and returns [{text, scopes}], with
+// the line state chained — needed for multi-line tags like <go .../>.
 function tokenize(grammar, source) {
   const out = [];
   let ruleStack = textmate.INITIAL;
@@ -66,9 +67,10 @@ function tokenize(grammar, source) {
     for (const token of result.tokens) {
       const text = line.substring(token.startIndex, token.endIndex);
       if (text.trim() === '') continue;
-      // O texto é comparado sem as bordas em branco: a gramática costuma
-      // devolver o conteúdo Go junto com o espaço que o separa da tag
-      // (ex.: `<go:if cond/>` produz " cond"), e esse espaço não é relevante.
+      // The text is compared without the surrounding whitespace: the grammar
+      // usually returns the Go content together with the space separating it
+      // from the tag (e.g.: `<go:if cond/>` produces " cond"), and that space
+      // is not relevant.
       out.push({ text: text.trim(), scopes: token.scopes });
     }
     ruleStack = result.ruleStack;
@@ -76,43 +78,43 @@ function tokenize(grammar, source) {
   return out;
 }
 
-// assertScope encontra o primeiro token cujo texto casa e exige que ele tenha
-// o escopo esperado.
+// assertScope finds the first token whose text matches and requires it to have
+// the expected scope.
 function assertScope(tokens, text, expectedScope) {
   const token = tokens.find((t) => t.text === text);
-  assert.ok(token, `token ${JSON.stringify(text)} não foi encontrado`);
+  assert.ok(token, `token ${JSON.stringify(text)} not found`);
   assert.ok(
     token.scopes.includes(expectedScope),
-    `token ${JSON.stringify(text)} tem escopos [${token.scopes.join(', ')}], esperado incluir ${expectedScope}`,
+    `token ${JSON.stringify(text)} has scopes [${token.scopes.join(', ')}], expected to include ${expectedScope}`,
   );
 }
 
-// assertEmbeddedGo exige que o trecho esteja marcado como Go embutido — é essa
-// marca que o VSCode usa para colorir o conteúdo como Go de verdade.
+// assertEmbeddedGo requires the chunk to be marked as embedded Go — that is the
+// mark VSCode uses to color the content as real Go.
 function assertEmbeddedGo(tokens, text) {
   assertScope(tokens, text, 'meta.embedded.block.go');
 }
 
 const tests = {
-  'reconhece <go:import> e marca o conteúdo como Go'(grammar) {
+  'recognizes <go:import> and marks the content as Go'(grammar) {
     const tokens = tokenize(grammar, '<go:import ("fmt")/>');
     assertScope(tokens, 'go:import', 'keyword.control.import.ghp');
     assertEmbeddedGo(tokens, '("fmt")');
   },
 
-  'reconhece <go= ...> como echo'(grammar) {
+  'recognizes <go= ...> as echo'(grammar) {
     const tokens = tokenize(grammar, '<title><go= expression /></title>');
     assertScope(tokens, 'go=', 'keyword.control.echo.ghp');
     assertEmbeddedGo(tokens, 'expression');
   },
 
-  'reconhece bloco <go .../> multi-linha'(grammar) {
+  'recognizes a multi-line <go .../> block'(grammar) {
     const tokens = tokenize(grammar, '<go\n    items := []string{"a"}\n/>');
     assertScope(tokens, 'go', 'keyword.control.ghp');
     assertEmbeddedGo(tokens, 'items := []string{"a"}');
   },
 
-  'reconhece go:if / go:else / fechamento'(grammar) {
+  'recognizes go:if / go:else / closing tag'(grammar) {
     const tokens = tokenize(
       grammar,
       '<go:if variable == value/>\n  x\n<go:else/>\n  y\n<go:endif/>',
@@ -120,11 +122,11 @@ const tests = {
     assertScope(tokens, 'go:if', 'keyword.control.ghp');
     assertEmbeddedGo(tokens, 'variable == value');
     assertScope(tokens, 'go:else', 'keyword.control.ghp');
-    // O fechamento é uma tag própria com o mesmo escopo de controle.
+    // The closing tag appears as its own token, with the same control scope.
     assertScope(tokens, 'go:endif', 'keyword.control.ghp');
   },
 
-  'reconhece switch/case/default'(grammar) {
+  'recognizes switch/case/default'(grammar) {
     const tokens = tokenize(
       grammar,
       '<go:switch variable/>\n<go:case value/>\n<go:default/>\n<go:endswitch/>',
@@ -135,36 +137,36 @@ const tests = {
     assertEmbeddedGo(tokens, 'variable');
   },
 
-  'reconhece go:for'(grammar) {
+  'recognizes go:for'(grammar) {
     const tokens = tokenize(grammar, '<go:for _, item := range items/>\n<go:endfor/>');
     assertScope(tokens, 'go:for', 'keyword.control.ghp');
     assertEmbeddedGo(tokens, '_, item := range items');
   },
 
-  'não confunde tag HTML que começa com "go" com bloco Go'(grammar) {
+  'does not mistake an HTML tag starting with "go" for a Go block'(grammar) {
     const tokens = tokenize(grammar, '<google-maps zoom="3"></google-maps>');
     const wrong = tokens.find((t) => t.scopes.includes('meta.tag.statement.ghp'));
     assert.ok(
       !wrong,
-      `<google-maps> foi tratado como bloco Go (token ${JSON.stringify(wrong?.text)})`,
+      `<google-maps> was treated as a Go block (token ${JSON.stringify(wrong?.text)})`,
     );
   },
 
-  'não trata go:import como tag de controle'(grammar) {
+  'does not treat go:import as a control tag'(grammar) {
     const tokens = tokenize(grammar, '<go:import ("fmt")/>');
     const token = tokens.find((t) => t.text === 'go:import');
     assert.ok(
       !token.scopes.includes('meta.tag.control.ghp'),
-      'go:import caiu no padrão de tag de controle',
+      'go:import fell into the control tag pattern',
     );
   },
 
-  'processa docs/template.ghp inteiro sem cair para texto puro'(grammar) {
+  'processes the whole docs/template.ghp without falling into plain text'(grammar) {
     const templatePath = path.join(__dirname, '..', '..', '..', 'docs', 'template.ghp');
     const source = fs.readFileSync(templatePath, 'utf8');
     const tokens = tokenize(grammar, source);
 
-    // Toda tag presente no template de referência precisa ser reconhecida.
+    // Every tag present in the reference template must be recognized.
     for (const tag of [
       'go:import',
       'go=',
@@ -181,7 +183,7 @@ const tests = {
       const found = tokens.find(
         (t) => t.text === tag && t.scopes.some((s) => s.startsWith('keyword.control')),
       );
-      assert.ok(found, `tag ${tag} do template de referência não foi reconhecida`);
+      assert.ok(found, `tag ${tag} from the reference template was not recognized`);
     }
   },
 };
@@ -201,6 +203,6 @@ const tests = {
   }
 
   const total = Object.keys(tests).length;
-  console.log(`\n${total - failed}/${total} testes passaram`);
+  console.log(`\n${total - failed}/${total} tests passed`);
   process.exit(failed === 0 ? 0 : 1);
 })();
