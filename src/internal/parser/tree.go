@@ -8,18 +8,18 @@ import (
 
 var tagKindNames = map[tagKind]string{
 	tagNone:        "text",
-	tagImport:      "<go:import>",
-	tagStatement:   "<go>",
-	tagEcho:        "<go=>",
-	tagIf:          "<go:if>",
-	tagElse:        "<go:else>",
-	tagSwitch:      "<go:switch>",
-	tagCase:        "<go:case>",
-	tagDefault:     "<go:default>",
-	tagFor:         "<go:for>",
-	tagCloseIf:     "</go:if>",
-	tagCloseSwitch: "</go:switch>",
-	tagCloseFor:    "</go:for>",
+	tagImport:      "<go:import/>",
+	tagStatement:   "<go/>",
+	tagEcho:        "<go=/>",
+	tagIf:          "<go:if/>",
+	tagElse:        "<go:else/>",
+	tagSwitch:      "<go:switch/>",
+	tagCase:        "<go:case/>",
+	tagDefault:     "<go:default/>",
+	tagFor:         "<go:for/>",
+	tagCloseIf:     "<go:endif/>",
+	tagCloseSwitch: "<go:endswitch/>",
+	tagCloseFor:    "<go:endfor/>",
 }
 
 func (k tagKind) String() string {
@@ -32,9 +32,9 @@ func (k tagKind) String() string {
 // parseNodes parses a sequence of nodes until EOF or one of the stop kinds
 // is reached. The stop tag itself is consumed from the scanner but not
 // turned into a node - it's returned to the caller instead, so callers
-// like buildIf can tell a <go:else> apart from a </go:if>. A nil stop map
-// means "run to EOF" (used at the top level), in which case the returned
-// token is always the zero tagToken.
+// like buildIf can tell a <go:else/> apart from a <go:endif/>. A nil stop
+// map means "run to EOF" (used at the top level), in which case the
+// returned token is always the zero tagToken.
 func parseNodes(s *scanner, stop map[tagKind]bool) ([]ast.Node, tagToken, error) {
 	var nodes []ast.Node
 
@@ -95,7 +95,7 @@ func buildNode(s *scanner, tok tagToken) (ast.Node, error) {
 			return nil, err
 		}
 		if close.kind == tagNone {
-			return nil, &SyntaxError{Line: tok.line, Message: "<go:for> missing </go:for>"}
+			return nil, &SyntaxError{Line: tok.line, Message: "<go:for> missing <go:endfor/>"}
 		}
 		return ast.NewFor(tok.payload, body, tok.line), nil
 
@@ -105,9 +105,10 @@ func buildNode(s *scanner, tok tagToken) (ast.Node, error) {
 }
 
 // buildIf handles a <go:if> that already had its head read (tok). It reads
-// the "then" body up to <go:else> or </go:if>; if it stopped at <go:else>,
-// it reads a second body up to </go:if>. Else stays nil (not an empty,
-// non-nil slice) when there is no <go:else>, matching ast.If's contract.
+// the "then" body up to <go:else/> or <go:endif/>; if it stopped at
+// <go:else/>, it reads a second body up to <go:endif/>. Else stays nil (not
+// an empty, non-nil slice) when there is no <go:else/>, matching ast.If's
+// contract.
 func buildIf(s *scanner, tok tagToken) (ast.Node, error) {
 	stop := map[tagKind]bool{tagElse: true, tagCloseIf: true}
 
@@ -116,12 +117,12 @@ func buildIf(s *scanner, tok tagToken) (ast.Node, error) {
 		return nil, err
 	}
 	if close.kind == tagNone {
-		return nil, &SyntaxError{Line: tok.line, Message: "<go:if> missing </go:if>"}
+		return nil, &SyntaxError{Line: tok.line, Message: "<go:if> missing <go:endif/>"}
 	}
 
 	var els []ast.Node
 	if close.kind == tagElse {
-		// Chained else-if (<go:else algumacondicao>) isn't supported in
+		// Chained else-if (<go:else algumacondicao/>) isn't supported in
 		// this version - go:else is always bare. Rejecting it here
 		// beats silently discarding whatever the developer wrote after
 		// "go:else", which would otherwise look like it worked.
@@ -134,7 +135,7 @@ func buildIf(s *scanner, tok tagToken) (ast.Node, error) {
 			return nil, err
 		}
 		if close.kind == tagNone {
-			return nil, &SyntaxError{Line: tok.line, Message: "<go:if> missing </go:if>"}
+			return nil, &SyntaxError{Line: tok.line, Message: "<go:if> missing <go:endif/>"}
 		}
 	}
 
@@ -142,10 +143,10 @@ func buildIf(s *scanner, tok tagToken) (ast.Node, error) {
 }
 
 // buildSwitch handles a <go:switch> that already had its head read (tok).
-// Its body is a run of <go:case>/<go:default> blocks up to </go:switch>;
-// any text sitting directly between <go:switch> and the first case (e.g.
-// stray whitespace) is discarded rather than kept, since GHP's grammar
-// doesn't give it anywhere to live on the Switch node.
+// Its body is a run of <go:case/>/<go:default/> blocks up to
+// <go:endswitch/>; any text sitting directly between <go:switch> and the
+// first case (e.g. stray whitespace) is discarded rather than kept, since
+// GHP's grammar doesn't give it anywhere to live on the Switch node.
 func buildSwitch(s *scanner, tok tagToken) (ast.Node, error) {
 	sw := ast.NewSwitch(tok.payload, nil, nil, tok.line)
 	stop := map[tagKind]bool{tagCase: true, tagDefault: true, tagCloseSwitch: true}
@@ -180,13 +181,13 @@ func buildSwitch(s *scanner, tok tagToken) (ast.Node, error) {
 			next = after
 
 		default:
-			return nil, &SyntaxError{Line: tok.line, Message: "<go:switch> missing </go:switch>"}
+			return nil, &SyntaxError{Line: tok.line, Message: "<go:switch> missing <go:endswitch/>"}
 		}
 	}
 	return sw, nil
 }
 
-// parseImportPaths splits a <go:import (...)> payload into its individual
+// parseImportPaths splits a <go:import (...)/> payload into its individual
 // paths. GHP mirrors Go's own import syntax: parentheses hold one path per
 // line (or comma-separated), each optionally prefixed with an alias.
 func parseImportPaths(payload string) ([]ast.ImportPath, error) {

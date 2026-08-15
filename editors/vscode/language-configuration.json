@@ -10,8 +10,8 @@
     ["(", ")"]
   ],
   "autoClosingPairs": [
-    { "open": "<go:", "close": ">", "notIn": ["comment", "string"] },
-    { "open": "<go=", "close": ">", "notIn": ["comment", "string"] },
+    { "open": "<go:", "close": "/>", "notIn": ["comment", "string"] },
+    { "open": "<go=", "close": "/>", "notIn": ["comment", "string"] },
     { "open": "{", "close": "}" },
     { "open": "[", "close": "]" },
     { "open": "(", "close": ")" },
@@ -30,12 +30,12 @@
     ["<", ">"]
   ],
   "indentationRules": {
-    "increaseIndentPattern": "<go:(if|else|switch|case|default|for)\\b[^>]*>\\s*$|<(?!\\?|area|base|br|col|frame|hr|html|img|input|link|meta|param|embed|source|track|wbr)([a-zA-Z][a-zA-Z0-9:._-]*)(?:\\s[^>]*)?>(?![^<]*</\\2>)\\s*$",
-    "decreaseIndentPattern": "^\\s*(</go:(if|switch|for)>|<go:(else|case|default)\\b[^>]*>|</[a-zA-Z][a-zA-Z0-9:._-]*\\s*>)"
+    "increaseIndentPattern": "<go:(if|else|switch|case|default|for)\\b[^>]*/>\\s*$|<(?!\\?|area|base|br|col|frame|hr|html|img|input|link|meta|param|embed|source|track|wbr)([a-zA-Z][a-zA-Z0-9:._-]*)(?:\\s[^>]*)?>(?![^<]*</\\2>)\\s*$",
+    "decreaseIndentPattern": "^\\s*(<go:(endif|endswitch|endfor)/>|<go:(else|case|default)\\b[^>]*/>|</[a-zA-Z][a-zA-Z0-9:._-]*\\s*>)"
   },
   "onEnterRules": [
     {
-      "beforeText": "<go:(if|else|switch|case|default|for)\\b[^>]*>\\s*$",
+      "beforeText": "<go:(if|else|switch|case|default|for)\\b[^>]*/>\\s*$",
       "action": { "indent": "indent" }
     }
   ],

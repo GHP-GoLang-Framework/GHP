@@ -1,49 +1,49 @@
 {
   "Import de pacotes Go": {
     "prefix": "go:import",
-    "body": ["<go:import (\"${1:fmt}\")>"],
+    "body": ["<go:import (\"${1:fmt}\")/>"],
     "description": "Declara um ou mais imports Go usados na página"
   },
   "Bloco de código Go": {
     "prefix": "go",
-    "body": ["<go", "\t${1:// código Go}", ">"],
+    "body": ["<go", "\t${1:// código Go}", "/>"],
     "description": "Bloco de código Go (statement), pode ocupar várias linhas"
   },
   "Renderizar expressão": {
     "prefix": "go=",
-    "body": ["<go= ${1:expressao} >"],
+    "body": ["<go= ${1:expressao} />"],
     "description": "Renderiza o valor de uma expressão Go no HTML (com escaping automático)"
   },
   "Condicional if": {
     "prefix": "go:if",
-    "body": ["<go:if ${1:condicao}>", "\t$0", "</go:if>"],
+    "body": ["<go:if ${1:condicao}/>", "\t$0", "<go:endif/>"],
     "description": "Condicional — renderiza o corpo se a condição for verdadeira"
   },
   "Condicional if/else": {
     "prefix": "go:ifelse",
-    "body": ["<go:if ${1:condicao}>", "\t$0", "<go:else>", "\t", "</go:if>"],
+    "body": ["<go:if ${1:condicao}/>", "\t$0", "<go:else/>", "\t", "<go:endif/>"],
     "description": "Condicional com ramo alternativo"
   },
   "Laço for": {
     "prefix": "go:for",
-    "body": ["<go:for ${1:_, item := range items}>", "\t$0", "</go:for>"],
+    "body": ["<go:for ${1:_, item := range items}/>", "\t$0", "<go:endfor/>"],
     "description": "Laço — repete o corpo uma vez por iteração"
   },
   "Switch": {
     "prefix": "go:switch",
     "body": [
-      "<go:switch ${1:variavel}>",
-      "\t<go:case ${2:valor}>",
+      "<go:switch ${1:variavel}/>",
+      "\t<go:case ${2:valor}/>",
       "\t\t$0",
-      "\t<go:default>",
+      "\t<go:default/>",
       "\t\t",
-      "</go:switch>"
+      "<go:endswitch/>"
     ],
     "description": "Switch com um case e default"
   },
   "Case do switch": {
     "prefix": "go:case",
-    "body": ["<go:case ${1:valor}>", "\t$0"],
+    "body": ["<go:case ${1:valor}/>", "\t$0"],
     "description": "Ramo de um <go:switch>"
   }
 }

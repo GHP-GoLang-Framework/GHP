@@ -23,13 +23,13 @@ type Text struct {
 }
 
 // Import declares one or more Go packages needed by the page, from a
-// <go:import (...)> tag.
+// <go:import (...)/> tag.
 type Import struct {
 	Paths []ImportPath
 	line  int
 }
 
-// ImportPath is a single package path inside a <go:import (...)> tag,
+// ImportPath is a single package path inside a <go:import (...)/> tag,
 // with an optional alias (e.g. `f "fmt"`).
 type ImportPath struct {
 	Alias string
@@ -49,30 +49,30 @@ type Echo struct {
 	line int
 }
 
-// If is a conditional: <go:if cond> Then [<go:else> Else] </go:if>
+// If is a conditional: <go:if cond/> Then [<go:else/> Else] <go:endif/>
 type If struct {
 	Cond string
 	Then []Node
-	Else []Node // nil when there is no <go:else>
+	Else []Node // nil when there is no <go:else/>
 	line int
 }
 
-// Switch is a <go:switch expr>...</go:switch>
+// Switch is a <go:switch expr/>...<go:endswitch/>
 type Switch struct {
 	Expr    string
 	Cases   []Case
-	Default []Node // nil when there is no <go:default>
+	Default []Node // nil when there is no <go:default/>
 	line    int
 }
 
-// Case is a single <go:case value> branch inside a Switch
+// Case is a single <go:case value/> branch inside a Switch
 type Case struct {
 	Value string
 	Body  []Node
 	Line  int
 }
 
-// For is a loop: <go:for expr> Body </go:for>
+// For is a loop: <go:for expr/> Body <go:endfor/>
 type For struct {
 	Expr string
 	Body []Node

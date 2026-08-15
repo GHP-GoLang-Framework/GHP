@@ -16,41 +16,43 @@ O GHP está sendo reescrito do zero com uma sintaxe nova, focada em DX. Hoje o r
 ## A sintaxe (alvo)
 
 ```html
-<go:import ("fmt")>
+<go:import ("fmt")/>
 
 <go
     items := []string{"café", "chá", "suco"}
->
+/>
 
 <!doctype html>
 <html lang="pt-br">
 <head>
-  <title><go= fmt.Sprintf("Cardápio (%d itens)", len(items)) ></title>
+  <title><go= fmt.Sprintf("Cardápio (%d itens)", len(items)) /></title>
 </head>
 <body>
   <ul>
-    <go:for _, item := range items>
-      <li><go= item ></li>
-    </go:for>
+    <go:for _, item := range items/>
+      <li><go= item /></li>
+    <go:endfor/>
   </ul>
 
-  <go:if len(items) == 0>
+  <go:if len(items) == 0/>
     <p>Nada no cardápio ainda.</p>
-  <go:else>
+  <go:else/>
     <p>Bom apetite!</p>
-  </go:if>
+  <go:endif/>
 </body>
 </html>
 ```
 
+Toda tag GHP é self-closing (termina com `/>`). Blocos com corpo — `<go:if>`, `<go:switch>`, `<go:for>` — são fechados pelas tags `<go:endif/>`, `<go:endswitch/>` e `<go:endfor/>`.
+
 | Tag | O que faz |
 | --- | --- |
-| `<go:import (...)>` | Importa um ou mais pacotes — padrão, externos ou do seu módulo. |
-| `<go ...>` | Bloco de código Go (statement) — pode abrir escopo entre trechos de HTML. |
-| `<go= expressão>` | Renderiza o valor de uma expressão no HTML, com escaping automático. |
-| `<go:if>` / `<go:else>` / `</go:if>` | Condicional, com os operadores nativos do Go. |
-| `<go:switch>` / `<go:case>` / `<go:default>` | Switch. |
-| `<go:for>` / `</go:for>` | Laço — qualquer forma de `for`/`range` válida em Go. |
+| `<go:import (...)/>` | Importa um ou mais pacotes — padrão, externos ou do seu módulo. |
+| `<go .../>` | Bloco de código Go (statement) — pode abrir escopo entre trechos de HTML. |
+| `<go= expressão/>` | Renderiza o valor de uma expressão no HTML, com escaping automático. |
+| `<go:if/>` / `<go:else/>` / `<go:endif/>` | Condicional, com os operadores nativos do Go. |
+| `<go:switch/>` / `<go:case/>` / `<go:default/>` / `<go:endswitch/>` | Switch. |
+| `<go:for/>` / `<go:endfor/>` | Laço — qualquer forma de `for`/`range` válida em Go. |
 
 Roteamento é por arquivo: `pages/index.ghp` vira `/`, `pages/blog/[slug].ghp` vira `/blog/{slug}`.
 

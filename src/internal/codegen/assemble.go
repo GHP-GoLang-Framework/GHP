@@ -169,7 +169,7 @@ func nestedImport(nodes []ast.Node) *ast.Import {
 //
 // A user import whose path matches one of the automatic ones is skipped
 // if it has no alias (genuinely redundant, e.g. the page also explicitly
-// wrote <go:import ("io")>). But it can't be honored if it does have an
+// wrote <go:import ("io")/>). But it can't be honored if it does have an
 // alias: genText/genEcho's generated calls always use the default name
 // (io.WriteString, fmt.Sprint, html.EscapeString), so a page that aliases
 // one of those paths would end up with code calling a name nothing

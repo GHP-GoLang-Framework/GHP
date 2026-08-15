@@ -13,7 +13,7 @@ import (
 // is allowed inside any branch.
 //
 // Two things come for free from emitting a real Go switch instead of
-// something bespoke: a <go:case "a", "b"> works with zero special
+// something bespoke: a <go:case "a", "b"/> works with zero special
 // handling, because Value is emitted verbatim after "case " and Go's own
 // switch already accepts a comma-separated value list; and there's no
 // fallthrough between cases unless the generated code said so explicitly
