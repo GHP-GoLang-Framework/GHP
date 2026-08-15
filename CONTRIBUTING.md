@@ -1,74 +1,74 @@
-# Contribuindo com o GHP
+# Contributing to GHP
 
-Obrigado pelo interesse em contribuir. Este documento cobre o essencial pra começar — os detalhes de cada parte estão linkados abaixo.
+Thanks for your interest in contributing. This document covers the essentials to get started — the details of each part are linked below.
 
-## Antes de começar
+## Before you start
 
-- **Fluxo de git e PR**: leia [`docs/git-workflow.md`](docs/git-workflow.md). Resumo: branch a partir da `main`, PR de volta pra `main`, CI verde + aprovação obrigatória antes do merge. Sem exceção — nem o mantenedor commita direto na `main`.
-- **Testes**: leia [`docs/testing.md`](docs/testing.md). Cobertura mínima de 90% (unit + integration) é obrigatória no CI.
-- **Sintaxe do GHP**: [`docs/template.ghp`](docs/template.ghp) é a referência da linguagem que o parser/codegen vão implementar.
+- **Git and PR workflow**: read [`docs/git-workflow.md`](docs/git-workflow.md). Summary: branch off `main`, PR back to `main`, green CI + mandatory approval before merge. No exceptions — not even the maintainer commits directly to `main`.
+- **Tests**: read [`docs/testing.md`](docs/testing.md). A minimum coverage of 90% (unit + integration) is mandatory in CI.
+- **GHP syntax**: [`docs/template.ghp`](docs/template.ghp) is the reference for the language the parser/codegen will implement.
 
-## Configurando o ambiente local
+## Setting up the local environment
 
-Pré-requisitos: Go (versão do [`go.mod`](go.mod)) e Node.js (só pra rodar os git hooks — o framework em si é 100% Go).
+Prerequisites: Go (version from [`go.mod`](go.mod)) and Node.js (only to run the git hooks — the framework itself is 100% Go).
 
 ```bash
 git clone https://github.com/GHP-GoLang-Framework/GHP.git
 cd GHP
-npm install   # instala husky e commitlint, configura os git hooks
+npm install   # installs husky and commitlint, configures the git hooks
 ```
 
-Isso já deixa o `pre-commit` (gofmt + `go vet` nos arquivos alterados) e o `commit-msg` (commitlint) ativos.
+This already activates `pre-commit` (gofmt + `go vet` on the changed files) and `commit-msg` (commitlint).
 
-## Fazendo uma mudança
+## Making a change
 
 ```bash
 git checkout main
 git pull --ff-only origin main
-git checkout -b feat/nome-da-mudanca
+git checkout -b feat/name-of-the-change
 
-# ... edita, commita ...
+# ... edit, commit ...
 
-gofmt -l ./src                    # sem saída = formatado
-go vet ./src/...                  # análise estática
-go test -short ./src/... -race    # testes unit (pula integration/e2e)
-go test ./src/test/integration/... -race   # o que o CI vai rodar de qualquer forma
+gofmt -l ./src                    # no output = formatted
+go vet ./src/...                  # static analysis
+go test -short ./src/... -race    # unit tests (skips integration/e2e)
+go test ./src/test/integration/... -race   # what CI will run anyway
 
-git push -u origin feat/nome-da-mudanca
-gh pr create --base main --title "feat(escopo): descrição no imperativo"
+git push -u origin feat/name-of-the-change
+gh pr create --base main --title "feat(scope): description in the imperative"
 ```
 
-## Mensagens de commit
+## Commit messages
 
-[Conventional Commits](https://www.conventionalcommits.org/pt-br/), validado automaticamente pelo `commit-msg` hook. Formato:
+[Conventional Commits](https://www.conventionalcommits.org/en/), validated automatically by the `commit-msg` hook. Format:
 
 ```
-tipo(escopo opcional): descrição curta no imperativo
+type(optional scope): short description in the imperative
 ```
 
-Tipos aceitos: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`. O título do PR segue o mesmo padrão — é revalidado no CI e vira a mensagem do commit de squash no merge.
+Accepted types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`. The PR title follows the same pattern — it is revalidated in CI and becomes the squash commit message on merge.
 
-Escopo recomendado: o domínio/pacote afetado (`parser`, `codegen`, `cli`, `devserver`, `runtime`, `routes`, `docker`, `docs`...), nunca o nome do arquivo.
+Recommended scope: the affected domain/package (`parser`, `codegen`, `cli`, `devserver`, `runtime`, `routes`, `docker`, `docs`...), never the file name.
 
-## Qualidade de código
+## Code quality
 
-- `gofmt` — formatação, corrigida automaticamente pelo `pre-commit`.
-- `go vet` — roda no `pre-commit` e no CI.
-- `golangci-lint` — roda no CI (job `lint`); rode `golangci-lint run ./src/...` localmente se quiser adiantar.
-- Testes cobrindo o que for adicionado — ver [`docs/testing.md`](docs/testing.md) pras convenções (table-driven tests, testar contra `io.Writer`/entrada explícita em vez de globais).
+- `gofmt` — formatting, fixed automatically by `pre-commit`.
+- `go vet` — runs in `pre-commit` and in CI.
+- `golangci-lint` — runs in CI (job `lint`); run `golangci-lint run ./src/...` locally if you want to get ahead.
+- Tests covering whatever is added — see [`docs/testing.md`](docs/testing.md) for the conventions (table-driven tests, testing against `io.Writer`/explicit input instead of globals).
 
-## Abrindo o PR
+## Opening the PR
 
-- Base sempre `main`.
-- Título em Conventional Commit.
-- O job `gate` (lint, testes unit/integration/e2e, cobertura ≥90%, build, verificação de vulnerabilidades e de segredos) precisa passar.
-- Precisa de aprovação de [@castrogusttavo](https://github.com/castrogusttavo) antes do merge.
-- Merge é por squash — a branch pode ter quantos commits de WIP forem necessários, só o commit final na `main` importa.
+- Base is always `main`.
+- Title in Conventional Commit.
+- The `gate` job (lint, unit/integration/e2e tests, coverage ≥90%, build, vulnerability and secret scanning) must pass.
+- Needs approval from [@castrogusttavo](https://github.com/castrogusttavo) before merge.
+- Merge is by squash — the branch can have as many WIP commits as needed; only the final commit on `main` matters.
 
-## Reportando bugs ou sugerindo funcionalidades
+## Reporting bugs or suggesting features
 
-Abra uma [issue no GitHub](https://github.com/GHP-GoLang-Framework/GHP/issues) descrevendo o problema ou a sugestão. Se for um bug, inclua um exemplo mínimo que reproduza o comportamento.
+Open a [GitHub issue](https://github.com/GHP-GoLang-Framework/GHP/issues) describing the problem or suggestion. If it is a bug, include a minimal example that reproduces the behavior.
 
-## Dúvidas
+## Questions
 
-Se algo neste documento ou nos linkados estiver desatualizado ou confuso, abra uma issue ou já resolva num PR — a documentação é código como qualquer outra parte do projeto.
+If anything in this document or its linked pages is outdated or confusing, open an issue or just fix it in a PR — documentation is code like any other part of the project.
