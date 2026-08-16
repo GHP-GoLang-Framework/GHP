@@ -73,10 +73,12 @@ func generateNode(b *strings.Builder, n ast.Node) error {
 		// so this is unreachable with real data today - Node can only
 		// be implemented from inside package ast (see its node()
 		// method), so nothing outside this switch can construct a value
-		// that lands here. It stays as a guardrail: if ast ever grows
-		// an 8th node type, this is what stops it from silently
-		// vanishing from generated pages instead of failing loudly.
-		return fmt.Errorf("codegen: no generator registered for %T (line %d)", n, n.Line())
+		// that lands here; the one value that does is nil, which is why
+		// %T is printed without touching any method on n. It stays as a
+		// guardrail: if ast ever grows an 8th node type, this is what
+		// stops it from silently vanishing from generated pages instead
+		// of failing loudly.
+		return fmt.Errorf("codegen: no generator registered for %T", n)
 	}
 	return nil
 }
