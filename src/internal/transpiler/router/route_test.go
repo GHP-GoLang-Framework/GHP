@@ -2,69 +2,36 @@ package router
 
 import "testing"
 
-func TestDeriveRoute(t *testing.T) {
+func TestDerive(t *testing.T) {
 	tests := []struct {
-		name    string
-		relPath string
-		want    string
+		name     string
+		relPath  string
+		wantPath string
+		wantFunc string
+		wantFile string
 	}{
-		{"root", "index.ghp", "/"},
-		{"static route", "about.ghp", "/about"},
-		{"subfolder index", "blog/index.ghp", "/blog"},
-		{"dynamic route", "blog/[slug].ghp", "/blog/{slug}"},
-		{"nested without index", "blog/2024/summary.ghp", "/blog/2024/summary"},
-		{"multiple dynamic parameters", "store/[category]/[product].ghp", "/store/{category}/{product}"},
+		{name: "root", relPath: "index.ghp", wantPath: "/", wantFunc: "Index", wantFile: "index.go"},
+		{name: "static route", relPath: "about.ghp", wantPath: "/about", wantFunc: "About", wantFile: "about.go"},
+		{name: "subfolder index", relPath: "blog/index.ghp", wantPath: "/blog", wantFunc: "BlogIndex", wantFile: "blog_index.go"},
+		{name: "dynamic route", relPath: "blog/[slug].ghp", wantPath: "/blog/{slug}", wantFunc: "BlogSlug", wantFile: "blog_slug.go"},
+		{name: "nested without index", relPath: "blog/2024/summary.ghp", wantPath: "/blog/2024/summary", wantFunc: "Blog2024Summary", wantFile: "blog_2024_summary.go"},
+		{name: "multiple dynamic parameters", relPath: "store/[category]/[product].ghp", wantPath: "/store/{category}/{product}", wantFunc: "StoreCategoryProduct", wantFile: "store_category_product.go"},
+		{name: "hyphen is a word boundary", relPath: "my-page.ghp", wantPath: "/my-page", wantFunc: "MyPage", wantFile: "my-page.go"},
+		{name: "underscore is a word boundary", relPath: "other_page.ghp", wantPath: "/other_page", wantFunc: "OtherPage", wantFile: "other_page.go"},
+		{name: "first multi-byte letter capitalized by rune, not byte", relPath: "órgão.ghp", wantPath: "/órgão", wantFunc: "Órgão", wantFile: "órgão.go"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := deriveRoute(tt.relPath); got != tt.want {
-				t.Errorf("deriveRoute(%q) = %q, want %q", tt.relPath, got, tt.want)
+			gotPath, gotFunc, gotFile := derive(tt.relPath)
+			if gotPath != tt.wantPath {
+				t.Errorf("derive(%q) route = %q, want %q", tt.relPath, gotPath, tt.wantPath)
 			}
-		})
-	}
-}
-
-func TestDeriveFuncName(t *testing.T) {
-	tests := []struct {
-		name    string
-		relPath string
-		want    string
-	}{
-		{"root", "index.ghp", "Index"},
-		{"static route", "about.ghp", "About"},
-		{"first multi-byte letter capitalized by rune, not byte", "órgão.ghp", "Órgão"},
-		{"subfolder index keeps Index in the name", "blog/index.ghp", "BlogIndex"},
-		{"dynamic route without brackets in the name", "blog/[slug].ghp", "BlogSlug"},
-		{"hyphen becomes a word boundary", "my-page.ghp", "MyPage"},
-		{"underscore becomes a word boundary", "other_page.ghp", "OtherPage"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := deriveFuncName(tt.relPath); got != tt.want {
-				t.Errorf("deriveFuncName(%q) = %q, want %q", tt.relPath, got, tt.want)
+			if gotFunc != tt.wantFunc {
+				t.Errorf("derive(%q) func name = %q, want %q", tt.relPath, gotFunc, tt.wantFunc)
 			}
-		})
-	}
-}
-
-func TestDeriveGoFile(t *testing.T) {
-	tests := []struct {
-		name    string
-		relPath string
-		want    string
-	}{
-		{"root", "index.ghp", "index.go"},
-		{"static route", "about.ghp", "about.go"},
-		{"subfolder flattened with underscore", "blog/index.ghp", "blog_index.go"},
-		{"brackets removed", "blog/[slug].ghp", "blog_slug.go"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := deriveGoFile(tt.relPath); got != tt.want {
-				t.Errorf("deriveGoFile(%q) = %q, want %q", tt.relPath, got, tt.want)
+			if gotFile != tt.wantFile {
+				t.Errorf("derive(%q) go file = %q, want %q", tt.relPath, gotFile, tt.wantFile)
 			}
 		})
 	}

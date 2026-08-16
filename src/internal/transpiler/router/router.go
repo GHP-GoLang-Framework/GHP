@@ -31,26 +31,41 @@ func (e *ConflictError) Error() string {
 	return fmt.Sprintf("%s and %s share %s: %q", e.First, e.Second, e.What, e.Value)
 }
 
+// site tracks the routes and func names seen so far, rejecting collisions
+// as pages are added - the two checks Scan has to run for every file.
+type site struct {
+	routes map[string]string // route -> first .ghp path that claimed it
+	funcs  map[string]string // func name -> first .ghp path that claimed it
+	pages  []Page
+}
+
+// add records page, or fails if another page already claimed its route
+// or func name. A derived GoFile is deliberately not checked: it's a
+// function of the same joined segments that define FuncName, so any GoFile
+// collision is necessarily a FuncName collision and is caught above.
+func (s *site) add(page Page) error {
+	if other, ok := s.routes[page.Route]; ok {
+		return &ConflictError{What: "the same route", Value: page.Route, First: other, Second: page.GhpPath}
+	}
+	if other, ok := s.funcs[page.FuncName]; ok {
+		return &ConflictError{What: "the same function name", Value: page.FuncName, First: other, Second: page.GhpPath}
+	}
+	s.routes[page.Route] = page.GhpPath
+	s.funcs[page.FuncName] = page.GhpPath
+	s.pages = append(s.pages, page)
+	return nil
+}
+
 // Scan walks dir recursively for *.ghp files and derives a Page for each
-// one, following the convention documented on deriveRoute. dir is
-// whatever directory the caller wants scanned (e.g. the ghp CLI's --dir
-// flag) - this package has no opinion on what it's named or where it
-// lives, and never falls back to a default of its own.
+// one, following the convention documented on derive. dir is whatever
+// directory the caller wants scanned (e.g. the ghp CLI's --dir flag) -
+// this package has no opinion on what it's named or where it lives.
 //
 // It returns a *ConflictError if two different files derive the same
-// Route or FuncName, and a plain error if a derived FuncName
-// isn't a valid Go identifier (e.g. a page named "2024.ghp" on its own,
-// with no other path segment to give it a leading letter).
-//
-// A derived GoFile is deliberately not checked for collisions: GoFile is
-// a function of the same joined segments that define FuncName (the '_'
-// used as filename separator is a FuncName word boundary too), so any
-// two files that share a GoFile already share a FuncName and are caught
-// by the check above.
+// Route or FuncName, and a plain error if a derived FuncName isn't a
+// valid Go identifier (e.g. a page named "2024.ghp" on its own).
 func Scan(dir string) ([]Page, error) {
-	var pages []Page
-	byRoute := make(map[string]string)
-	byFuncName := make(map[string]string)
+	s := &site{routes: make(map[string]string), funcs: make(map[string]string)}
 
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -60,9 +75,6 @@ func Scan(dir string) ([]Page, error) {
 			return nil
 		}
 
-		// path always comes from walking dir itself, so it's always
-		// relative to it - this error is unreachable in practice, kept
-		// only because filepath.Rel returns one.
 		rel, err := filepath.Rel(dir, path)
 		if err != nil {
 			return err
@@ -75,32 +87,18 @@ func Scan(dir string) ([]Page, error) {
 			}
 		}
 
-		page := Page{
-			GhpPath:  rel,
-			Route:    deriveRoute(rel),
-			FuncName: deriveFuncName(rel),
-			GoFile:   deriveGoFile(rel),
-		}
+		page := Page{GhpPath: rel}
+		page.Route, page.FuncName, page.GoFile = derive(rel)
 
 		if !token.IsIdentifier(page.FuncName) {
 			return fmt.Errorf("%s: invalid function name derived from file: %q", rel, page.FuncName)
 		}
 
-		if other, ok := byRoute[page.Route]; ok {
-			return &ConflictError{What: "the same route", Value: page.Route, First: other, Second: page.GhpPath}
-		}
-		if other, ok := byFuncName[page.FuncName]; ok {
-			return &ConflictError{What: "the same function name", Value: page.FuncName, First: other, Second: page.GhpPath}
-		}
-		byRoute[page.Route] = page.GhpPath
-		byFuncName[page.FuncName] = page.GhpPath
-
-		pages = append(pages, page)
-		return nil
+		return s.add(page)
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return pages, nil
+	return s.pages, nil
 }
