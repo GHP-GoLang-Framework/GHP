@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"ghp/src/internal/codegen"
 	"ghp/src/internal/parser"
+	"ghp/src/internal/transpiler/codegen"
 )
 
 // TestParseAssembleBuild is the GHP-11 end-to-end acceptance criterion:

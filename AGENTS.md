@@ -4,7 +4,7 @@ Working guidelines for AI agents editing this repository. These rules are mandat
 
 ## Repo overview
 
-- Go monorepo: CLI in `src/cmd/ghp`, core under `src/internal` (`parser`, `ast`, `codegen`, `router`), integration/e2e under `src/test`.
+- Go monorepo: CLI in `src/cmd/ghp`, core under `src/internal` — LSP (`parser`, shared `ast`) and `transpiler` (`codegen`, `router`) — integration/e2e under `src/test`.
 - Source of truth for the GHP language: `docs/template.ghp`.
 - Root tooling layer is Node (husky + commitlint); the framework itself is 100% Go.
 - VS Code extension lives under `editors/vscode` (TextMate grammar, snippets, grammar tests).
