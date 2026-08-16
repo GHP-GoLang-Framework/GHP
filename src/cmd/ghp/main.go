@@ -20,11 +20,9 @@ func run(args []string, stdout io.Writer) int {
 
 	switch args[0] {
 	case "dev":
-		fmt.Fprintln(stdout, "Starting development server...")
+		return Dev(args[1:], stdout)
 	case "build":
-		fmt.Fprintln(stdout, "Building GHP project...")
-
-		fmt.Fprintln(stdout, "GHP project built")
+		return Build(args[1:], stdout)
 	case "help":
 		printUsage(stdout)
 	default:

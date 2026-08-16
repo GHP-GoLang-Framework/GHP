@@ -20,18 +20,6 @@ func TestRun(t *testing.T) {
 			wantContains: []string{"ghp <command>"},
 		},
 		{
-			name:         "dev starts the development server",
-			args:         []string{"dev"},
-			wantExitCode: 0,
-			wantContains: []string{"Starting development server..."},
-		},
-		{
-			name:         "build builds the project",
-			args:         []string{"build"},
-			wantExitCode: 0,
-			wantContains: []string{"Building GHP project...", "GHP project built"},
-		},
-		{
 			name:         "help prints usage",
 			args:         []string{"help"},
 			wantExitCode: 0,
