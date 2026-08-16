@@ -107,7 +107,7 @@ func runDev(ctx context.Context, args []string, stdout io.Writer) int {
 		return 1
 	}
 
-	server, err := startApp(ctx, bin, stdout)
+	server, err := startApp(ctx, bin)
 	if err != nil {
 		fmt.Fprintf(stdout, "ghp dev: %v\n", err)
 		return 1
@@ -137,7 +137,7 @@ func runDev(ctx context.Context, args []string, stdout io.Writer) int {
 				continue
 			}
 			server.Stop()
-			server, err = startApp(ctx, bin, stdout)
+			server, err = startApp(ctx, bin)
 			if err != nil {
 				fmt.Fprintf(stdout, "ghp dev: %v\n", err)
 				return 1
@@ -152,14 +152,17 @@ type appServer struct {
 	cancel context.CancelFunc
 }
 
-// startApp launches bin, wiring its output to stdout and letting it
-// inherit the environment - GHP_PORT is what drives which port it listens
-// on (the generated main.go defaults it to 8080).
-func startApp(ctx context.Context, bin string, stdout io.Writer) (*appServer, error) {
+// startApp launches bin, attaching its output to the process streams and
+// letting it inherit the environment - GHP_PORT is what drives which port
+// it listens on (the generated main.go defaults it to 8080). The app's
+// output goes to os.Stdout/os.Stderr rather than the injectable writer
+// because os/exec drains it on its own goroutines, racing any use of that
+// writer (reported as a data race under -race).
+func startApp(ctx context.Context, bin string) (*appServer, error) {
 	childCtx, cancel := context.WithCancel(ctx)
 	cmd := exec.CommandContext(childCtx, bin)
-	cmd.Stdout = stdout
-	cmd.Stderr = stdout
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
 		cancel()
 		return nil, err
