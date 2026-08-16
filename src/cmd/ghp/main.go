@@ -20,11 +20,9 @@ func run(args []string, stdout io.Writer) int {
 
 	switch args[0] {
 	case "dev":
-		fmt.Fprintln(stdout, "Starting development server...")
+		return Dev(args[1:], stdout)
 	case "build":
-		fmt.Fprintln(stdout, "Building GHP project...")
-
-		fmt.Fprintln(stdout, "GHP project built")
+		return Build(args[1:], stdout)
 	case "help":
 		printUsage(stdout)
 	default:
@@ -41,12 +39,12 @@ func printUsage(w io.Writer) {
 	GHP - Good Hygiene Practices
 
 	Usage:
-	  ghp <command>
+	  ghp <command> [dir]
 
 	Commands:
-	  dev       Start the development environment
-	  build     Build the current project
-	  help      Show this help message
+	  dev [dir]    Start the dev server with live reload
+	  build [dir]  Build the project into <dir>/build
+	  help         Show this help message
 
 	Run 'ghp help' for more information.
 	`)
