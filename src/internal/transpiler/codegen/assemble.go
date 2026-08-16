@@ -13,17 +13,16 @@ import (
 // an http.HandlerFunc-shaped function (named funcName) whose body comes
 // from Generate.
 //
-// ghpFile is the original .ghp path, threaded through to Generate for its
-// //line directives. The result is run through go/format before being
-// returned - both for idiomatic formatting and as a cheap correctness
-// check: if the assembled source isn't valid Go (e.g. funcName isn't a
-// valid identifier), this reports that as an error here instead of
-// handing back something that would only fail later, confusingly, at
-// `go build`. That check only catches syntax problems, not semantic ones
-// (an undefined identifier still parses fine) - the import-handling
-// errors below exist because that gap is real.
-func Assemble(pkg, funcName, ghpFile string, prog *ast.Program) (string, error) {
-	body, err := Generate(ghpFile, prog.Nodes)
+// The result is run through go/format before being returned - both for
+// idiomatic formatting and as a cheap correctness check: if the assembled
+// source isn't valid Go (e.g. funcName isn't a valid identifier), this
+// reports that as an error here instead of handing back something that
+// would only fail later, confusingly, at `go build`. That check only
+// catches syntax problems, not semantic ones (an undefined identifier
+// still parses fine) - the import-handling errors below exist because
+// that gap is real.
+func Assemble(pkg, funcName string, prog *ast.Program) (string, error) {
+	body, err := Generate(prog.Nodes)
 	if err != nil {
 		return "", err
 	}

@@ -11,12 +11,12 @@ import (
 func TestGenerateText(t *testing.T) {
 	nodes := []ast.Node{ast.NewText("hello world", 3)}
 
-	got, err := Generate("page.ghp", nodes)
+	got, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
 
-	want := "//line page.ghp:3\nio.WriteString(w, \"hello world\")\n"
+	want := "io.WriteString(w, \"hello world\")\n"
 	if got != want {
 		t.Errorf("Generate() = %q, want %q", got, want)
 	}
@@ -32,7 +32,7 @@ func TestGenerateTextEscapesSpecialChars(t *testing.T) {
 	value := "line 1\n\"quotes\" and \\backslash"
 	nodes := []ast.Node{ast.NewText(value, 1)}
 
-	got, err := Generate("p.ghp", nodes)
+	got, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}

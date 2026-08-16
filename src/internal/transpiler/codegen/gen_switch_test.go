@@ -19,23 +19,17 @@ func TestGenerateSwitchWithDefault(t *testing.T) {
 			1),
 	}
 
-	got, err := Generate("p.ghp", nodes)
+	got, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
 
-	want := "//line p.ghp:1\n" +
-		"switch v {\n" +
-		"//line p.ghp:2\n" +
+	want := "switch v {\n" +
 		"case 1:\n" +
-		"//line p.ghp:2\n" +
 		"io.WriteString(w, \"one\")\n" +
-		"//line p.ghp:3\n" +
 		"case 2:\n" +
-		"//line p.ghp:3\n" +
 		"io.WriteString(w, \"two\")\n" +
 		"default:\n" +
-		"//line p.ghp:4\n" +
 		"io.WriteString(w, \"other\")\n" +
 		"}\n"
 	if got != want {
@@ -51,14 +45,12 @@ func TestGenerateSwitchWithoutDefault(t *testing.T) {
 			1),
 	}
 
-	got, err := Generate("p.ghp", nodes)
+	got, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
 
-	want := "//line p.ghp:1\n" +
-		"switch v {\n" +
-		"//line p.ghp:2\n" +
+	want := "switch v {\n" +
 		"case 1:\n" +
 		"}\n"
 	if got != want {
@@ -75,14 +67,12 @@ func TestGenerateSwitchMultiValueCase(t *testing.T) {
 		ast.NewSwitch("v", []ast.Case{{Value: `"a", "b"`, Body: nil, Line: 1}}, nil, 1),
 	}
 
-	got, err := Generate("p.ghp", nodes)
+	got, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
 
-	want := "//line p.ghp:1\n" +
-		"switch v {\n" +
-		"//line p.ghp:1\n" +
+	want := "switch v {\n" +
 		"case \"a\", \"b\":\n" +
 		"}\n"
 	if got != want {
@@ -103,7 +93,7 @@ func TestGenerateSwitchProducesValidGo(t *testing.T) {
 			1),
 	}
 
-	body, err := Generate("p.ghp", nodes)
+	body, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}

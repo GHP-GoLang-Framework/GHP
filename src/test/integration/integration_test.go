@@ -45,7 +45,7 @@ func TestParseAssembleBuild(t *testing.T) {
 		t.Fatalf("parser.Parse: %v", err)
 	}
 
-	out, err := codegen.Assemble("pages", "Index", "index.ghp", prog)
+	out, err := codegen.Assemble("pages", "Index", prog)
 	if err != nil {
 		t.Fatalf("codegen.Assemble: %v", err)
 	}

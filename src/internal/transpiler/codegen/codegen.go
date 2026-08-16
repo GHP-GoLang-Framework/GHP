@@ -22,13 +22,10 @@ import (
 )
 
 // Generate walks nodes in source order and returns the Go statements that
-// render them, one node at a time. file is the original .ghp path, used to
-// emit a `//line file:N` directive before each node's output - so a
-// compile error in the generated .go, or a debugger stepping through it,
-// points back at the line the developer actually wrote.
-func Generate(file string, nodes []ast.Node) (string, error) {
+// render them, one node at a time.
+func Generate(nodes []ast.Node) (string, error) {
 	var b strings.Builder
-	if err := generateNodes(&b, file, nodes); err != nil {
+	if err := generateNodes(&b, nodes); err != nil {
 		return "", err
 	}
 	return b.String(), nil
@@ -38,9 +35,9 @@ func Generate(file string, nodes []ast.Node) (string, error) {
 // Generate itself, this is what a tag with a nested body (<go:if>,
 // <go:switch>, <go:for>) calls to render its own Then/Else/Cases/Body -
 // see gen_if.go, gen_switch.go and gen_for.go for examples.
-func generateNodes(b *strings.Builder, file string, nodes []ast.Node) error {
+func generateNodes(b *strings.Builder, nodes []ast.Node) error {
 	for _, n := range nodes {
-		if err := generateNode(b, file, n); err != nil {
+		if err := generateNode(b, n); err != nil {
 			return err
 		}
 	}
@@ -52,7 +49,7 @@ func generateNodes(b *strings.Builder, file string, nodes []ast.Node) error {
 // case here and implements the generator in its own gen_*.go file, so two
 // tags being built at the same time only ever touch this one shared line
 // each, not each other's code.
-func generateNode(b *strings.Builder, file string, n ast.Node) error {
+func generateNode(b *strings.Builder, n ast.Node) error {
 	switch node := n.(type) {
 	case *ast.Import:
 		// Imports don't render anything in the function body - GHP-11
@@ -60,17 +57,17 @@ func generateNode(b *strings.Builder, file string, n ast.Node) error {
 		// the import(...) block once, deduplicated.
 		return nil
 	case *ast.Text:
-		genText(b, file, node)
+		genText(b, node)
 	case *ast.Echo:
-		genEcho(b, file, node)
+		genEcho(b, node)
 	case *ast.Statement:
-		genStatement(b, file, node)
+		genStatement(b, node)
 	case *ast.If:
-		return genIf(b, file, node)
+		return genIf(b, node)
 	case *ast.Switch:
-		return genSwitch(b, file, node)
+		return genSwitch(b, node)
 	case *ast.For:
-		return genFor(b, file, node)
+		return genFor(b, node)
 	default:
 		// Every concrete type ast.Node currently seals is handled above,
 		// so this is unreachable with real data today - Node can only
