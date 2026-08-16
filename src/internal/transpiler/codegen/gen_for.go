@@ -23,11 +23,10 @@ import (
 // doesn't handle - with every current ast.Node type supported, that can't
 // happen with real data today; it's there so a future unsupported tag
 // fails loudly instead of being silently dropped.
-func genFor(b *strings.Builder, file string, n *ast.For) error {
-	fmt.Fprintf(b, "//line %s:%d\n", file, n.Line())
+func genFor(b *strings.Builder, n *ast.For) error {
 	fmt.Fprintf(b, "for %s {\n", n.Expr)
 
-	if err := generateNodes(b, file, n.Body); err != nil {
+	if err := generateNodes(b, n.Body); err != nil {
 		return err
 	}
 

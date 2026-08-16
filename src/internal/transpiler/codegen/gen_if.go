@@ -20,17 +20,16 @@ import (
 // generateNode doesn't handle - with every current ast.Node type
 // supported, that can't happen with real data today; they're there so a
 // future unsupported tag fails loudly instead of being silently dropped.
-func genIf(b *strings.Builder, file string, n *ast.If) error {
-	fmt.Fprintf(b, "//line %s:%d\n", file, n.Line())
+func genIf(b *strings.Builder, n *ast.If) error {
 	fmt.Fprintf(b, "if %s {\n", n.Cond)
 
-	if err := generateNodes(b, file, n.Then); err != nil {
+	if err := generateNodes(b, n.Then); err != nil {
 		return err
 	}
 
 	if n.Else != nil {
 		b.WriteString("} else {\n")
-		if err := generateNodes(b, file, n.Else); err != nil {
+		if err := generateNodes(b, n.Else); err != nil {
 			return err
 		}
 	}

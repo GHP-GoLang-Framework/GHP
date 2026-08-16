@@ -13,14 +13,12 @@ func TestGenerateIfWithoutElse(t *testing.T) {
 		ast.NewIf("a == b", []ast.Node{ast.NewText("yes", 2)}, nil, 1),
 	}
 
-	got, err := Generate("p.ghp", nodes)
+	got, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
 
-	want := "//line p.ghp:1\n" +
-		"if a == b {\n" +
-		"//line p.ghp:2\n" +
+	want := "if a == b {\n" +
 		"io.WriteString(w, \"yes\")\n" +
 		"}\n"
 	if got != want {
@@ -36,17 +34,14 @@ func TestGenerateIfWithElse(t *testing.T) {
 			1),
 	}
 
-	got, err := Generate("p.ghp", nodes)
+	got, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
 
-	want := "//line p.ghp:1\n" +
-		"if a == b {\n" +
-		"//line p.ghp:2\n" +
+	want := "if a == b {\n" +
 		"io.WriteString(w, \"yes\")\n" +
 		"} else {\n" +
-		"//line p.ghp:3\n" +
 		"io.WriteString(w, \"no\")\n" +
 		"}\n"
 	if got != want {
@@ -61,7 +56,7 @@ func TestGenerateNestedIfProducesValidGo(t *testing.T) {
 	inner := ast.NewIf("b", []ast.Node{ast.NewText("x", 2)}, nil, 2)
 	outer := ast.NewIf("a", []ast.Node{inner}, []ast.Node{ast.NewText("y", 4)}, 1)
 
-	body, err := Generate("p.ghp", []ast.Node{outer})
+	body, err := Generate([]ast.Node{outer})
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}

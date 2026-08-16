@@ -18,7 +18,6 @@ import (
 // escaper: the ghp runtime package (GHP-16) is expected to replace it with
 // something context-aware (attribute vs. text vs. URL), the way
 // html/template does. Until then, this is the simplest correct choice.
-func genEcho(b *strings.Builder, file string, n *ast.Echo) {
-	fmt.Fprintf(b, "//line %s:%d\n", file, n.Line())
+func genEcho(b *strings.Builder, n *ast.Echo) {
 	fmt.Fprintf(b, "io.WriteString(w, html.EscapeString(fmt.Sprint(%s)))\n", n.Expr)
 }

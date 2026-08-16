@@ -24,21 +24,19 @@ import (
 // type supported, that can't happen with real data today; they're there
 // so a future unsupported tag fails loudly instead of being silently
 // dropped.
-func genSwitch(b *strings.Builder, file string, n *ast.Switch) error {
-	fmt.Fprintf(b, "//line %s:%d\n", file, n.Line())
+func genSwitch(b *strings.Builder, n *ast.Switch) error {
 	fmt.Fprintf(b, "switch %s {\n", n.Expr)
 
 	for _, c := range n.Cases {
-		fmt.Fprintf(b, "//line %s:%d\n", file, c.Line)
 		fmt.Fprintf(b, "case %s:\n", c.Value)
-		if err := generateNodes(b, file, c.Body); err != nil {
+		if err := generateNodes(b, c.Body); err != nil {
 			return err
 		}
 	}
 
 	if n.Default != nil {
 		b.WriteString("default:\n")
-		if err := generateNodes(b, file, n.Default); err != nil {
+		if err := generateNodes(b, n.Default); err != nil {
 			return err
 		}
 	}

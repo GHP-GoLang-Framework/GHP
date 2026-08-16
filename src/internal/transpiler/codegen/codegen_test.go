@@ -14,12 +14,12 @@ func TestGenerateSkipsImportNodes(t *testing.T) {
 		ast.NewText("hi", 2),
 	}
 
-	got, err := Generate("page.ghp", nodes)
+	got, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
 
-	want := "//line page.ghp:2\nio.WriteString(w, \"hi\")\n"
+	want := "io.WriteString(w, \"hi\")\n"
 	if got != want {
 		t.Errorf("Generate() = %q, want %q", got, want)
 	}
@@ -39,7 +39,7 @@ func TestGenerateBraceSpanningStatementProducesValidGo(t *testing.T) {
 		ast.NewStatement("}", 3),
 	}
 
-	body, err := Generate("page.ghp", nodes)
+	body, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}

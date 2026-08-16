@@ -31,7 +31,7 @@ How to contribute to GHP: branch, commit, PR, and review.
 
    ```
    feat(parser): recognize the <go:for expression> tag
-   fix(codegen): fix out-of-order //line directive
+   fix(codegen): emit case body before its sibling's text
    ```
 
    Accepted types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.

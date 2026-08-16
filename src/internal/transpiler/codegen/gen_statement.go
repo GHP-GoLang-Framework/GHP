@@ -18,7 +18,6 @@ import (
 // later land in the generated file exactly where they'd need to for Go
 // itself to parse them as one block - the parser doesn't have to know
 // about this at all, `go build` does the pairing for free.
-func genStatement(b *strings.Builder, file string, n *ast.Statement) {
-	fmt.Fprintf(b, "//line %s:%d\n", file, n.Line())
+func genStatement(b *strings.Builder, n *ast.Statement) {
 	fmt.Fprintf(b, "%s\n", n.Code)
 }

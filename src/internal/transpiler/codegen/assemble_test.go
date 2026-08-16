@@ -54,7 +54,7 @@ func assertImports(t *testing.T, f *goast.File, want ...string) {
 func TestAssembleOnlyText(t *testing.T) {
 	prog := &ast.Program{Nodes: []ast.Node{ast.NewText("hi", 1)}}
 
-	out, err := Assemble("pages", "Index", "index.ghp", prog)
+	out, err := Assemble("pages", "Index", prog)
 	if err != nil {
 		t.Fatalf("Assemble: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestAssembleOnlyText(t *testing.T) {
 func TestAssembleEcho(t *testing.T) {
 	prog := &ast.Program{Nodes: []ast.Node{ast.NewEcho("name", 1)}}
 
-	out, err := Assemble("pages", "Index", "index.ghp", prog)
+	out, err := Assemble("pages", "Index", prog)
 	if err != nil {
 		t.Fatalf("Assemble: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestAssembleNoOutputNeedsOnlyHTTP(t *testing.T) {
 	// signature.
 	prog := &ast.Program{Nodes: []ast.Node{ast.NewStatement("_ = 1", 1)}}
 
-	out, err := Assemble("pages", "Index", "index.ghp", prog)
+	out, err := Assemble("pages", "Index", prog)
 	if err != nil {
 		t.Fatalf("Assemble: %v", err)
 	}
@@ -105,7 +105,7 @@ func TestAssembleUserImport(t *testing.T) {
 		ast.NewText("hi", 2),
 	}}
 
-	out, err := Assemble("pages", "Index", "index.ghp", prog)
+	out, err := Assemble("pages", "Index", prog)
 	if err != nil {
 		t.Fatalf("Assemble: %v", err)
 	}
@@ -120,7 +120,7 @@ func TestAssembleUserImportWithAlias(t *testing.T) {
 		ast.NewText("hi", 2),
 	}}
 
-	out, err := Assemble("pages", "Index", "index.ghp", prog)
+	out, err := Assemble("pages", "Index", prog)
 	if err != nil {
 		t.Fatalf("Assemble: %v", err)
 	}
@@ -149,7 +149,7 @@ func TestAssembleDedupesUserImportAgainstAuto(t *testing.T) {
 		ast.NewEcho("name", 2),
 	}}
 
-	out, err := Assemble("pages", "Index", "index.ghp", prog)
+	out, err := Assemble("pages", "Index", prog)
 	if err != nil {
 		t.Fatalf("Assemble: %v", err)
 	}
@@ -170,7 +170,7 @@ func TestAssembleAliasedImportCollidingWithAutoFails(t *testing.T) {
 		ast.NewText("hi", 2),
 	}}
 
-	_, err := Assemble("pages", "Index", "index.ghp", prog)
+	_, err := Assemble("pages", "Index", prog)
 	if err == nil {
 		t.Fatal("Assemble() = nil error, want alias error on automatic package")
 	}
@@ -189,7 +189,7 @@ func TestAssembleNestedImportFails(t *testing.T) {
 			nil, 1),
 	}}
 
-	_, err := Assemble("pages", "Index", "index.ghp", prog)
+	_, err := Assemble("pages", "Index", prog)
 	if err == nil {
 		t.Fatal("Assemble() = nil error, want nested <go:import> error")
 	}
@@ -206,7 +206,7 @@ func TestAssembleConflictingAliasForSamePathFails(t *testing.T) {
 		ast.NewText("hi", 3),
 	}}
 
-	_, err := Assemble("pages", "Index", "index.ghp", prog)
+	_, err := Assemble("pages", "Index", prog)
 	if err == nil {
 		t.Fatal("Assemble() = nil error, want conflicting aliases error")
 	}
@@ -221,7 +221,7 @@ func TestAssembleDedupesRepeatedUserImport(t *testing.T) {
 		ast.NewText("hi", 3),
 	}}
 
-	out, err := Assemble("pages", "Index", "index.ghp", prog)
+	out, err := Assemble("pages", "Index", prog)
 	if err != nil {
 		t.Fatalf("Assemble: %v", err)
 	}
@@ -233,7 +233,7 @@ func TestAssembleDedupesRepeatedUserImport(t *testing.T) {
 func TestAssembleInvalidFuncNameFails(t *testing.T) {
 	prog := &ast.Program{Nodes: []ast.Node{ast.NewText("hi", 1)}}
 
-	_, err := Assemble("pages", "invalid name", "index.ghp", prog)
+	_, err := Assemble("pages", "invalid name", prog)
 	if err == nil {
 		t.Fatal("Assemble() = nil error, want error for invalid funcName")
 	}

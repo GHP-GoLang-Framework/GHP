@@ -12,12 +12,12 @@ import (
 func TestGenerateEcho(t *testing.T) {
 	nodes := []ast.Node{ast.NewEcho("user.Name", 5)}
 
-	got, err := Generate("page.ghp", nodes)
+	got, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
 
-	want := "//line page.ghp:5\nio.WriteString(w, html.EscapeString(fmt.Sprint(user.Name)))\n"
+	want := "io.WriteString(w, html.EscapeString(fmt.Sprint(user.Name)))\n"
 	if got != want {
 		t.Errorf("Generate() = %q, want %q", got, want)
 	}
@@ -31,12 +31,12 @@ func TestGenerateEchoFunctionCall(t *testing.T) {
 	// without caring what's inside.
 	nodes := []ast.Node{ast.NewEcho("user.FullName()", 8)}
 
-	got, err := Generate("page.ghp", nodes)
+	got, err := Generate(nodes)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
 
-	want := "//line page.ghp:8\nio.WriteString(w, html.EscapeString(fmt.Sprint(user.FullName())))\n"
+	want := "io.WriteString(w, html.EscapeString(fmt.Sprint(user.FullName())))\n"
 	if got != want {
 		t.Errorf("Generate() = %q, want %q", got, want)
 	}

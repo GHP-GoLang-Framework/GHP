@@ -50,7 +50,7 @@ func Generate(dir string) ([]File, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", p.GhpPath, err)
 		}
-		out, err := codegen.Assemble("pages", p.FuncName, p.GhpPath, prog)
+		out, err := codegen.Assemble("pages", p.FuncName, prog)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", p.GhpPath, err)
 		}

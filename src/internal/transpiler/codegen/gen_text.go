@@ -11,7 +11,6 @@ import (
 // valid, safely-escaped Go string literal regardless of what the source
 // HTML contains (quotes, newlines, unicode) - there's no manual escaping
 // to get wrong here.
-func genText(b *strings.Builder, file string, n *ast.Text) {
-	fmt.Fprintf(b, "//line %s:%d\n", file, n.Line())
+func genText(b *strings.Builder, n *ast.Text) {
 	fmt.Fprintf(b, "io.WriteString(w, %q)\n", n.Value)
 }
