@@ -39,12 +39,12 @@ func printUsage(w io.Writer) {
 	GHP - Good Hygiene Practices
 
 	Usage:
-	  ghp <command>
+	  ghp <command> [dir]
 
 	Commands:
-	  dev       Start the development environment
-	  build     Build the current project
-	  help      Show this help message
+	  dev [dir]    Start the dev server with live reload
+	  build [dir]  Build the project into <dir>/build
+	  help         Show this help message
 
 	Run 'ghp help' for more information.
 	`)
