@@ -2,9 +2,26 @@ package main
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func TestRunBuild(t *testing.T) {
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "index.ghp"), []byte("<h1>Home</h1>"), 0o644)
+
+	var out bytes.Buffer
+	if code := run([]string{"build", dir}, &out); code != 0 {
+		t.Fatalf("run(build dir) exit = %d, want 0\nout:\n%s", code, out.String())
+	}
+	for _, name := range []string{"main.go", "go.mod", "pages/index.go", "pages/register.go"} {
+		if _, err := os.Stat(filepath.Join(dir, "build", name)); err != nil {
+			t.Errorf("missing generated file build/%s: %v", name, err)
+		}
+	}
+}
 
 func TestRun(t *testing.T) {
 	tests := []struct {
@@ -30,6 +47,12 @@ func TestRun(t *testing.T) {
 			args:         []string{"bogus"},
 			wantExitCode: 2,
 			wantContains: []string{"Command unknown", "ghp <command>"},
+		},
+		{
+			name:         "dev with a bogus flag exits 2",
+			args:         []string{"dev", "--bogus"},
+			wantExitCode: 2,
+			wantContains: []string{"ghp dev: unexpected flag"},
 		},
 	}
 

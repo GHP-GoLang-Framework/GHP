@@ -65,6 +65,24 @@ func TestGenerateConflictError(t *testing.T) {
 	}
 }
 
+func TestGenerateReadError(t *testing.T) {
+	dir := t.TempDir()
+	os.Symlink(filepath.Join(dir, "missing.ghp"), filepath.Join(dir, "index.ghp"))
+
+	if _, err := Generate(dir); err == nil {
+		t.Fatal("Generate() = nil error, want read error")
+	}
+}
+
+func TestGenerateAssembleError(t *testing.T) {
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "index.ghp"), []byte("<go:if true/>\n<go:import (\"fmt\")/>\n<go:endif/>"), 0o644)
+
+	if _, err := Generate(dir); err == nil {
+		t.Fatal("Generate() = nil error, want assemble error")
+	}
+}
+
 func keys(files []File) []string {
 	var ks []string
 	for _, f := range files {
