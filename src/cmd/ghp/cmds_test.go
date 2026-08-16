@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -18,10 +19,9 @@ func TestBuild(t *testing.T) {
 	os.WriteFile(filepath.Join(dir, "index.ghp"), []byte("<h1>Home</h1>"), 0o644)
 	os.MkdirAll(filepath.Join(dir, "blog"), 0o755)
 	os.WriteFile(filepath.Join(dir, "blog", "[slug].ghp"), []byte(`<p><go= r.PathValue("slug") /></p>`), 0o644)
-	out := t.TempDir()
 
 	var buf bytes.Buffer
-	if code := Build([]string{"--dir", dir, "--out", out}, &buf); code != 0 {
+	if code := Build([]string{dir}, &buf); code != 0 {
 		t.Fatalf("Build exit = %d, want 0\nout:\n%s", code, buf.String())
 	}
 
@@ -31,8 +31,24 @@ func TestBuild(t *testing.T) {
 		}
 	}
 	for _, name := range []string{"main.go", "go.mod", "pages/index.go", "pages/blog_slug.go", "pages/register.go"} {
-		if _, err := os.Stat(filepath.Join(out, name)); err != nil {
-			t.Errorf("missing generated file %s: %v", name, err)
+		if _, err := os.Stat(filepath.Join(dir, "build", name)); err != nil {
+			t.Errorf("missing generated file build/%s: %v", name, err)
+		}
+	}
+}
+
+func TestBuildDefaultDir(t *testing.T) {
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "index.ghp"), []byte("<h1>Home</h1>"), 0o644)
+	t.Chdir(dir)
+
+	var buf bytes.Buffer
+	if code := Build(nil, &buf); code != 0 {
+		t.Fatalf("Build exit = %d, want 0\nout:\n%s", code, buf.String())
+	}
+	for _, name := range []string{"main.go", "go.mod", "pages/index.go", "pages/register.go"} {
+		if _, err := os.Stat(filepath.Join(dir, "build", name)); err != nil {
+			t.Errorf("missing generated file build/%s: %v", name, err)
 		}
 	}
 }
@@ -42,7 +58,7 @@ func TestBuildError(t *testing.T) {
 	os.WriteFile(filepath.Join(dir, "bad.ghp"), []byte(`<go:if x/>`), 0o644)
 
 	var buf bytes.Buffer
-	if code := Build([]string{"--dir", dir, "--out", t.TempDir()}, &buf); code != 1 {
+	if code := Build([]string{dir}, &buf); code != 1 {
 		t.Errorf("Build exit = %d, want 1\nout:\n%s", code, buf.String())
 	}
 	if !strings.Contains(buf.String(), "ghp build: bad.ghp") {
@@ -50,10 +66,22 @@ func TestBuildError(t *testing.T) {
 	}
 }
 
-func TestBuildFlagError(t *testing.T) {
-	var buf bytes.Buffer
-	if code := Build([]string{"--bogus"}, &buf); code != 2 {
-		t.Errorf("Build exit = %d, want 2\nout:\n%s", code, buf.String())
+func TestFlagErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		run  func(args []string, stdout io.Writer) int
+	}{
+		{"build", Build},
+		{"dev", Dev},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			code := tt.run([]string{"--bogus"}, &buf)
+			if code != 2 {
+				t.Errorf("%s exit = %d, want 2\nout:\n%s", tt.name, code, buf.String())
+			}
+		})
 	}
 }
 
@@ -64,12 +92,13 @@ func TestDevServesSlugRoute(t *testing.T) {
 	os.WriteFile(filepath.Join(dir, "blog", "[slug].ghp"), []byte(`<p>Slug: <go= r.PathValue("slug") /></p>`), 0o644)
 
 	port := freePort(t)
+	t.Setenv("GHP_PORT", port)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	var buf bytes.Buffer
 	done := make(chan int, 1)
-	go func() { done <- runDev(ctx, []string{"--dir", dir, "--port", port}, &buf) }()
+	go func() { done <- runDev(ctx, []string{dir}, &buf) }()
 
 	base := "http://127.0.0.1:" + port
 	waitFor(t, base+"/")
@@ -85,6 +114,38 @@ func TestDevServesSlugRoute(t *testing.T) {
 	if !strings.Contains(body, "Slug: ola") {
 		t.Errorf("GET /blog/ola body missing the slug\ngot: %s", body)
 	}
+
+	cancel()
+	select {
+	case code := <-done:
+		if code != 0 {
+			t.Fatalf("runDev exit = %d, want 0\nout:\n%s", code, buf.String())
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatalf("runDev did not stop after cancel\nout:\n%s", buf.String())
+	}
+}
+
+func TestDevReloadsOnPageChange(t *testing.T) {
+	dir := t.TempDir()
+	page := filepath.Join(dir, "index.ghp")
+	os.WriteFile(page, []byte("<h1>Version 1</h1>"), 0o644)
+
+	port := freePort(t)
+	t.Setenv("GHP_PORT", port)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var buf bytes.Buffer
+	done := make(chan int, 1)
+	go func() { done <- runDev(ctx, []string{dir}, &buf) }()
+
+	base := "http://127.0.0.1:" + port
+	waitFor(t, base+"/")
+	waitForBody(t, base+"/", "Version 1")
+
+	os.WriteFile(page, []byte("<h1>Version 2</h1>"), 0o644)
+	waitForBody(t, base+"/", "Version 2")
 
 	cancel()
 	select {
@@ -138,4 +199,22 @@ func readBody(t *testing.T, resp *http.Response) string {
 		t.Fatalf("read body: %v", err)
 	}
 	return b.String()
+}
+
+// waitForBody polls url until its body contains want, so reload tests can
+// wait for the running server to pick up a page change.
+func waitForBody(t *testing.T, url, want string) {
+	t.Helper()
+	deadline := time.Now().Add(30 * time.Second)
+	for {
+		if resp, err := http.Get(url); err == nil {
+			if body := readBody(t, resp); strings.Contains(body, want) {
+				return
+			}
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("body of %s never contained %q", url, want)
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
 }
