@@ -1,13 +1,8 @@
 ## Summary
-
-<!-- What changed and why, in 1-3 bullets -->
-
--
-
-## Related issue
-
 <!-- Reference the Linear issue, if any -->
 Refs: GHP-
+
+<!-- What changed and why, in 1-3 bullets -->
 
 ## How to test
 
@@ -24,5 +19,5 @@ Refs: GHP-
 
 ## Impact
 
-- Breaking change (`.ghp` syntax or `runtime` API)? yes/no
-- Manual action needed after merge (migration, new config, secret)? yes/no
+- Breaking change (`.ghp` syntax or `runtime` API)? y/n
+- Manual action needed after merge (migration, new config, secret)? y/n

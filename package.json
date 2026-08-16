@@ -6,7 +6,9 @@
     "prepare": "husky",
     "dev": "go run ./src/cmd/ghp dev",
     "build": "go build -o bin/ghp ./src/cmd/ghp",
-    "start": "./bin/ghp help"
+    "start": "./bin/ghp help",
+    "format": "gofmt -w ./src",
+    "coverage": "go test ./src/... -coverprofile=coverage.out -covermode=atomic -coverpkg=./src/... && go tool cover -func=coverage.out | grep total:"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
