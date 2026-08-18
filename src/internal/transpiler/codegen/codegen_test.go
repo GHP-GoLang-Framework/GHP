@@ -69,8 +69,9 @@ func TestGenerateErrorsOnUnsupportedNode(t *testing.T) {
 		nodes []ast.Node
 	}{
 		{"top level", []ast.Node{nil}},
-		{"if then body", []ast.Node{ast.NewIf("true", []ast.Node{nil}, nil, 1)}},
-		{"if else body", []ast.Node{ast.NewIf("true", nil, []ast.Node{nil}, 1)}},
+		{"if then body", []ast.Node{ast.NewIf("true", []ast.Node{nil}, nil, nil, 1)}},
+		{"if else body", []ast.Node{ast.NewIf("true", nil, nil, []ast.Node{nil}, 1)}},
+		{"if elif body", []ast.Node{ast.NewIf("true", nil, []ast.ElseIf{{Cond: "false", Body: []ast.Node{nil}, Line: 1}}, nil, 1)}},
 		{"for body", []ast.Node{ast.NewFor("i := 0; i < 1; i++", []ast.Node{nil}, 1)}},
 		{"switch case body", []ast.Node{ast.NewSwitch("v", []ast.Case{{Value: "1", Body: []ast.Node{nil}, Line: 1}}, nil, 1)}},
 		{"switch default body", []ast.Node{ast.NewSwitch("v", nil, []ast.Node{nil}, 1)}},

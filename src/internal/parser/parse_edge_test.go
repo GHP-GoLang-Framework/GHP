@@ -25,7 +25,9 @@ func TestParseEdgeCases(t *testing.T) {
 		{"error inside a case body", `<go:switch v/><go:case 1/><go:if a/>x`, "line 1: <go:if> missing <go:endif/>"},
 		{"error inside the default body", `<go:switch v/><go:default/><go:if a/>x`, "line 1: <go:if> missing <go:endif/>"},
 		{"switch with no case/default/close", `<go:switch v/>text`, "line 1: <go:switch> missing <go:endswitch/>"},
-		{"chained else-if not supported", `<go:if a/>x<go:else b/>y<go:endif/>`, "line 1: <go:else> does not take a condition - chained else-if isn't supported, use nested <go:if> instead"},
+		{"chained else-if via go:else still rejected", `<go:if a/>x<go:else b/>y<go:endif/>`, "line 1: <go:else> does not take a condition - chained else-if isn't supported, use nested <go:if> instead"},
+		{"elif without condition", `<go:if a/>x<go:elif/>y<go:endif/>`, "line 1: <go:elif> requires a condition"},
+		{"unclosed if after elif", `<go:if a/>x<go:elif b/>y`, "line 1: <go:if> missing <go:endif/>"},
 	}
 
 	for _, tt := range tests {

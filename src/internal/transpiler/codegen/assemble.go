@@ -73,6 +73,9 @@ func scanNeededImports(nodes []ast.Node, need *neededImports) {
 			need.io, need.html, need.fmt = true, true, true
 		case *ast.If:
 			scanNeededImports(node.Then, need)
+			for i := range node.Elifs {
+				scanNeededImports(node.Elifs[i].Body, need)
+			}
 			scanNeededImports(node.Else, need)
 		case *ast.Switch:
 			for _, c := range node.Cases {
@@ -136,7 +139,11 @@ func nestedImport(nodes []ast.Node) *ast.Import {
 		var bodies [][]ast.Node
 		switch node := n.(type) {
 		case *ast.If:
-			bodies = [][]ast.Node{node.Then, node.Else}
+			bodies = [][]ast.Node{node.Then}
+			for i := range node.Elifs {
+				bodies = append(bodies, node.Elifs[i].Body)
+			}
+			bodies = append(bodies, node.Else)
 		case *ast.Switch:
 			for _, c := range node.Cases {
 				bodies = append(bodies, c.Body)

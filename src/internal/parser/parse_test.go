@@ -143,6 +143,66 @@ func TestParseNodeTypes(t *testing.T) {
 		}
 	})
 
+	t.Run("if with elif only", func(t *testing.T) {
+		prog, err := Parse(`<go:if a/>yes<go:elif b/>maybe<go:endif/>`)
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		ifNode := prog.Nodes[0].(*ast.If)
+		if ifNode.Cond != "a" {
+			t.Errorf("Cond = %q, want %q", ifNode.Cond, "a")
+		}
+		if len(ifNode.Then) != 1 {
+			t.Fatalf("len(Then) = %d, want 1", len(ifNode.Then))
+		}
+		if len(ifNode.Elifs) != 1 {
+			t.Fatalf("len(Elifs) = %d, want 1", len(ifNode.Elifs))
+		}
+		if ifNode.Elifs[0].Cond != "b" {
+			t.Errorf("Elifs[0].Cond = %q, want %q", ifNode.Elifs[0].Cond, "b")
+		}
+		if len(ifNode.Elifs[0].Body) != 1 {
+			t.Fatalf("len(Elifs[0].Body) = %d, want 1", len(ifNode.Elifs[0].Body))
+		}
+		if ifNode.Else != nil {
+			t.Errorf("Else = %#v, want nil", ifNode.Else)
+		}
+	})
+
+	t.Run("if with elif and else", func(t *testing.T) {
+		prog, err := Parse(`<go:if a/>x<go:elif b/>y<go:else/>z<go:endif/>`)
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		ifNode := prog.Nodes[0].(*ast.If)
+		if len(ifNode.Elifs) != 1 {
+			t.Fatalf("len(Elifs) = %d, want 1", len(ifNode.Elifs))
+		}
+		if ifNode.Elifs[0].Cond != "b" {
+			t.Errorf("Elifs[0].Cond = %q, want %q", ifNode.Elifs[0].Cond, "b")
+		}
+		if len(ifNode.Else) != 1 {
+			t.Fatalf("len(Else) = %d, want 1", len(ifNode.Else))
+		}
+	})
+
+	t.Run("if with multiple elif", func(t *testing.T) {
+		prog, err := Parse(`<go:if a/>x<go:elif b/>y<go:elif c/>z<go:endif/>`)
+		if err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		ifNode := prog.Nodes[0].(*ast.If)
+		if len(ifNode.Elifs) != 2 {
+			t.Fatalf("len(Elifs) = %d, want 2", len(ifNode.Elifs))
+		}
+		if ifNode.Elifs[0].Cond != "b" {
+			t.Errorf("Elifs[0].Cond = %q, want %q", ifNode.Elifs[0].Cond, "b")
+		}
+		if ifNode.Elifs[1].Cond != "c" {
+			t.Errorf("Elifs[1].Cond = %q, want %q", ifNode.Elifs[1].Cond, "c")
+		}
+	})
+
 	t.Run("if with compound condition", func(t *testing.T) {
 		prog, err := Parse(`<go:if a && b || c/>x<go:endif/>`)
 		if err != nil {

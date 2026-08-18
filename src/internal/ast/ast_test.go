@@ -16,7 +16,7 @@ func TestNodeLine(t *testing.T) {
 		{"Import", NewImport(nil, 2), 2},
 		{"Statement", NewStatement("x := 1", 3), 3},
 		{"Echo", NewEcho("x", 4), 4},
-		{"If", NewIf("a", nil, nil, 5), 5},
+		{"If", NewIf("a", nil, nil, nil, 5), 5},
 		{"Switch", NewSwitch("a", nil, nil, 6), 6},
 		{"For", NewFor("a", nil, 7), 7},
 	}

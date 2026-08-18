@@ -65,3 +65,52 @@ func TestParseAssembleBuild(t *testing.T) {
 		t.Fatalf("go build failed: %v\n%s\n---\ngenerated file:\n%s", err, buildOut, out)
 	}
 }
+
+// TestParseAssembleBuildElif verifies that <go:elif/> compiles into
+// valid Go through the full parser → codegen → go build pipeline.
+func TestParseAssembleBuildElif(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipped in short mode (go test -short)")
+	}
+
+	src := `<go:import ("fmt")/>
+<go
+	n := 2
+/>
+<go:if n == 1/>
+<p>one</p>
+<go:elif n == 2/>
+<p>two</p>
+<go:elif n == 3/>
+<p>three</p>
+<go:else/>
+<p>other</p>
+<go:endif/>
+<go= fmt.Sprintf("done:%d", n) />
+`
+
+	prog, err := parser.Parse(src)
+	if err != nil {
+		t.Fatalf("parser.Parse: %v", err)
+	}
+
+	out, err := codegen.Assemble("pages", "Elif", prog)
+	if err != nil {
+		t.Fatalf("codegen.Assemble: %v", err)
+	}
+
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "elif.go"), []byte(out), 0o644); err != nil {
+		t.Fatalf("write elif.go: %v", err)
+	}
+	goMod := "module pages\n\ngo 1.26\n"
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte(goMod), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+
+	cmd := exec.Command("go", "build", "./...")
+	cmd.Dir = dir
+	if buildOut, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("go build failed: %v\n%s\n---\ngenerated file:\n%s", err, buildOut, out)
+	}
+}

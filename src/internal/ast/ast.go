@@ -49,12 +49,20 @@ type Echo struct {
 	line int
 }
 
-// If is a conditional: <go:if cond/> Then [<go:else/> Else] <go:endif/>
+// If is a conditional: <go:if cond/> Then [<go:elif .../>]* [<go:else/> Else] <go:endif/>
 type If struct {
+	Cond  string
+	Then  []Node
+	Elifs []ElseIf // zero or more <go:elif/> branches, in source order
+	Else  []Node   // nil when there is no <go:else/>
+	line  int
+}
+
+// ElseIf is a single <go:elif cond/> branch inside an If.
+type ElseIf struct {
 	Cond string
-	Then []Node
-	Else []Node // nil when there is no <go:else/>
-	line int
+	Body []Node
+	Line int
 }
 
 // Switch is a <go:switch expr/>...<go:endswitch/>
@@ -125,8 +133,8 @@ func NewEcho(expr string, line int) *Echo {
 	return &Echo{Expr: expr, line: line}
 }
 
-func NewIf(cond string, then, els []Node, line int) *If {
-	return &If{Cond: cond, Then: then, Else: els, line: line}
+func NewIf(cond string, then []Node, elifs []ElseIf, els []Node, line int) *If {
+	return &If{Cond: cond, Then: then, Elifs: elifs, Else: els, line: line}
 }
 
 func NewSwitch(expr string, cases []Case, def []Node, line int) *Switch {
