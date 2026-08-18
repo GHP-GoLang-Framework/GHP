@@ -7,19 +7,22 @@ import (
 	"ghp/src/internal/ast"
 )
 
-// If writes n as a Go if/else, recursing into Then and (when present)
-// Else through nodesFn - the same dispatch every node goes through, so
-// any tag is allowed inside either branch, including another <go:if>.
+// If emits a Go if/else, recursing into Then and (when present) Else
+// via nodesFn.
 //
-// n.Cond is emitted verbatim: whether or not the developer wrapped it in
-// parens (e.g. to work around the '>' tag-closing ambiguity), the result
-// is valid Go either way - `if (a > b) {` and `if a > b {` mean the same
-// thing to the compiler.
+// Output:
 //
-// The two error returns only fire if Then/Else contain a node type
-// nodesFn doesn't handle - with every current ast.Node type supported,
-// that can't happen with real data today; they're there so a future
-// unsupported tag fails loudly instead of being silently dropped.
+//	if <n.Cond> {
+//	  <nodesFn(n.Then)>
+//	}
+//	// optional:
+//	} else {
+//	  <nodesFn(n.Else)>
+//	}
+//
+//	b       – destination buffer
+//	n       – If node; Cond is the condition, Then/Else are branch bodies
+//	nodesFn – callback that renders child nodes (breaks circular import)
 func If(b *strings.Builder, n *ast.If, nodesFn NodesFunc) error {
 	fmt.Fprintf(b, "if %s {\n", n.Cond)
 

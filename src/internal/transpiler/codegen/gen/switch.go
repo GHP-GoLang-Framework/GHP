@@ -7,22 +7,22 @@ import (
 	"ghp/src/internal/ast"
 )
 
-// Switch writes n as a Go switch, one case per ast.Case plus an
-// optional default, recursing into each branch's body through nodesFn -
-// the same dispatch every node goes through, so any tag is allowed
-// inside any branch.
+// Switch emits a Go switch with one case per ast.Case and an optional
+// default, recursing into each branch body via nodesFn.
 //
-// Two things come for free from emitting a real Go switch instead of
-// something bespoke: a <go:case "a", "b"/> works with zero special
-// handling, because Value is emitted verbatim after "case " and Go's own
-// switch already accepts a comma-separated value list; and there's no
-// fallthrough between cases unless the generated code said so explicitly
-// (it never does), matching Go's own switch semantics.
+// Output:
 //
-// The two error returns only fire if a case's or default's body contains
-// a node type nodesFn doesn't handle - with every current ast.Node type
-// supported, that can't happen with real data today; they're there so a
-// future unsupported tag fails loudly instead of being silently dropped.
+//	switch <n.Expr> {
+//	case <value>:
+//	  <nodesFn(body)>
+//	// ...
+//	default:
+//	  <nodesFn(n.Default)>  // when present
+//	}
+//
+//	b       – destination buffer
+//	n       – Switch node; Expr is the switched value, Cases/Default are branches
+//	nodesFn – callback that renders child nodes (breaks circular import)
 func Switch(b *strings.Builder, n *ast.Switch, nodesFn NodesFunc) error {
 	fmt.Fprintf(b, "switch %s {\n", n.Expr)
 

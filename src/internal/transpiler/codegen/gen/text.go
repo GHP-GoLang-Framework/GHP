@@ -7,10 +7,13 @@ import (
 	"ghp/src/internal/ast"
 )
 
-// Text writes n's value to the response verbatim. %q lets fmt produce a
-// valid, safely-escaped Go string literal regardless of what the source
-// HTML contains (quotes, newlines, unicode) - there's no manual escaping
-// to get wrong here.
+// Text emits a raw string write. The value is %q-escaped so the
+// generated literal is always valid Go regardless of quotes or newlines.
+//
+// Output: io.WriteString(w, "<escaped value>")
+//
+//	b   – destination buffer
+//	n   – Text node whose Value is written verbatim to the response
 func Text(b *strings.Builder, n *ast.Text) {
 	fmt.Fprintf(b, "io.WriteString(w, %q)\n", n.Value)
 }
