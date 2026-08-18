@@ -24,6 +24,11 @@
     "body": ["<go:if ${1:condition}/>", "\t$0", "<go:else/>", "\t", "<go:endif/>"],
     "description": "Conditional with an alternative branch"
   },
+  "Conditional if/elif/else": {
+    "prefix": "go:elif",
+    "body": ["<go:if ${1:condition}/>", "\t$0", "<go:elif ${2:other_condition}/>", "\t", "<go:else/>", "\t", "<go:endif/>"],
+    "description": "Conditional with elif and else branches"
+  },
   "For loop": {
     "prefix": "go:for",
     "body": ["<go:for ${1:_, item := range items}/>", "\t$0", "<go:endfor/>"],
