@@ -20,6 +20,7 @@ const (
 	tagEcho
 	tagIf
 	tagElse
+	tagElif
 	tagSwitch
 	tagCase
 	tagDefault
@@ -41,6 +42,7 @@ var tagHeads = []struct {
 	{"go:import", tagImport},
 	{"go:if", tagIf},
 	{"go:else", tagElse},
+	{"go:elif", tagElif},
 	{"go:switch", tagSwitch},
 	{"go:case", tagCase},
 	{"go:default", tagDefault},

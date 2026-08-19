@@ -56,9 +56,9 @@
     },
 
     "tag-control": {
-      "comment": "Control structures. `else` and `default` take no expression; `if`, `switch`, `case`, and `for` take real Go up to the `/>`.",
+      "comment": "Control structures. `else` and `default` take no expression; `if`, `elif`, `switch`, `case`, and `for` take real Go up to the `/>`.",
       "name": "meta.tag.control.ghp",
-      "begin": "(<)(go:(?:if|else|switch|case|default|for))(?![\\w:-])",
+      "begin": "(<)(go:(?:if|else|elif|switch|case|default|for))(?![\\w:-])",
       "beginCaptures": {
         "1": { "name": "punctuation.definition.tag.begin.ghp" },
         "2": { "name": "keyword.control.ghp" }

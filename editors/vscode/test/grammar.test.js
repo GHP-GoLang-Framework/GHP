@@ -126,6 +126,18 @@ const tests = {
     assertScope(tokens, 'go:endif', 'keyword.control.ghp');
   },
 
+  'recognizes go:elif'(grammar) {
+    const tokens = tokenize(
+      grammar,
+      '<go:if a/>\n  x\n<go:elif b/>\n  y\n<go:else/>\n  z\n<go:endif/>',
+    );
+    assertScope(tokens, 'go:if', 'keyword.control.ghp');
+    assertScope(tokens, 'go:elif', 'keyword.control.ghp');
+    assertEmbeddedGo(tokens, 'b');
+    assertScope(tokens, 'go:else', 'keyword.control.ghp');
+    assertScope(tokens, 'go:endif', 'keyword.control.ghp');
+  },
+
   'recognizes switch/case/default'(grammar) {
     const tokens = tokenize(
       grammar,

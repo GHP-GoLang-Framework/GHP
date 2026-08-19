@@ -186,7 +186,7 @@ func TestAssembleNestedImportFails(t *testing.T) {
 	prog := &ast.Program{Nodes: []ast.Node{
 		ast.NewIf("true",
 			[]ast.Node{ast.NewImport([]ast.ImportPath{{Path: "strings"}}, 2)},
-			nil, 1),
+			nil, nil, 1),
 	}}
 
 	_, err := Assemble("pages", "Index", prog)

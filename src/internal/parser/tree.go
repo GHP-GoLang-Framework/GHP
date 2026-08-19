@@ -13,6 +13,7 @@ var tagKindNames = map[tagKind]string{
 	tagEcho:        "<go=/>",
 	tagIf:          "<go:if/>",
 	tagElse:        "<go:else/>",
+	tagElif:        "<go:elif/>",
 	tagSwitch:      "<go:switch/>",
 	tagCase:        "<go:case/>",
 	tagDefault:     "<go:default/>",
@@ -105,12 +106,13 @@ func buildNode(s *scanner, tok tagToken) (ast.Node, error) {
 }
 
 // buildIf handles a <go:if> that already had its head read (tok). It reads
-// the "then" body up to <go:else/> or <go:endif/>; if it stopped at
-// <go:else/>, it reads a second body up to <go:endif/>. Else stays nil (not
-// an empty, non-nil slice) when there is no <go:else/>, matching ast.If's
-// contract.
+// the "then" body up to <go:elif/>, <go:else/>, or <go:endif/>; when it
+// stops at <go:elif/>, it collects the elif condition and body, then loops
+// until a non-elif stop tag is reached.  Elifs, Else stay nil (not empty
+// slices) when there are no <go:elif/> or <go:else/> tags respectively,
+// matching ast.If's contract.
 func buildIf(s *scanner, tok tagToken) (ast.Node, error) {
-	stop := map[tagKind]bool{tagElse: true, tagCloseIf: true}
+	stop := map[tagKind]bool{tagElif: true, tagElse: true, tagCloseIf: true}
 
 	then, close, err := parseNodes(s, stop)
 	if err != nil {
@@ -120,12 +122,25 @@ func buildIf(s *scanner, tok tagToken) (ast.Node, error) {
 		return nil, &SyntaxError{Line: tok.line, Message: "<go:if> missing <go:endif/>"}
 	}
 
+	var elifs []ast.ElseIf
+	for close.kind == tagElif {
+		if close.payload == "" {
+			return nil, &SyntaxError{Line: close.line, Message: "<go:elif> requires a condition"}
+		}
+		elifBody, after, err := parseNodes(s, stop)
+		if err != nil {
+			return nil, err
+		}
+		elifs = append(elifs, ast.ElseIf{Cond: close.payload, Body: elifBody, Line: close.line})
+		close = after
+	}
+
+	if close.kind != tagElse && close.kind != tagCloseIf {
+		return nil, &SyntaxError{Line: tok.line, Message: "<go:if> missing <go:endif/>"}
+	}
+
 	var els []ast.Node
 	if close.kind == tagElse {
-		// Chained else-if (<go:else algumacondicao/>) isn't supported in
-		// this version - go:else is always bare. Rejecting it here
-		// beats silently discarding whatever the developer wrote after
-		// "go:else", which would otherwise look like it worked.
 		if close.payload != "" {
 			return nil, &SyntaxError{Line: close.line, Message: "<go:else> does not take a condition - chained else-if isn't supported, use nested <go:if> instead"}
 		}
@@ -139,7 +154,7 @@ func buildIf(s *scanner, tok tagToken) (ast.Node, error) {
 		}
 	}
 
-	return ast.NewIf(tok.payload, then, els, tok.line), nil
+	return ast.NewIf(tok.payload, then, elifs, els, tok.line), nil
 }
 
 // buildSwitch handles a <go:switch> that already had its head read (tok).
